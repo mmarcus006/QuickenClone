@@ -128,8 +128,8 @@ class TransactionDialog(QDialog):
                         data[field] = widget.text()
         
         # Ensure security field is always included
-        if not data['security']:
-            data['security'] = ''
+        if 'security' not in data or not data['security']:
+            data['security'] = self.fields['security'].text() or ''
         
         return data
 
@@ -194,8 +194,9 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            self.transactions.append(data)
-            self.update_transaction_list()
+            if data and data.get('security') and data.get('date'):
+                self.transactions.append(data)
+                self.update_transaction_list()
     
     def edit_transaction(self, item):
         idx = self.transaction_list.row(item)
@@ -273,9 +274,10 @@ class QIFConverterGUI(QMainWindow):
             return
         idx = self.transaction_list.currentRow()
         if idx >= 0 and idx < len(self.transactions):
-            del self.transactions[idx]
+            self.transactions.pop(idx)
             self.transaction_list.clear()
             self.update_transaction_list()
+            self.transaction_list.setCurrentRow(-1)
     
     def update_transaction_list(self):
         self.transaction_list.clear()
@@ -299,15 +301,20 @@ class QIFConverterGUI(QMainWindow):
             with open(filename, 'r') as f:
                 reader = csv.DictReader(f)
                 for row in reader:
-                    self.transactions.append({
-                        'action': row['Transaction Type'],
-                        'date': row['Trade Date'],
-                        'security': row.get('Symbol', ''),
-                        'price': float(row['Price']) if row.get('Price') else None,
-                        'quantity': float(row['Quantity']) if row.get('Quantity') else None,
-                        'commission': float(row['Commission']) if row.get('Commission') else None,
-                        'memo': row.get('Notes', '')
-                    })
+                    try:
+                        trans = {
+                            'action': row['Transaction Type'].strip(),
+                            'date': row['Trade Date'].strip(),
+                            'security': row.get('Symbol', '').strip(),
+                            'price': float(row['Price']) if row.get('Price') else None,
+                            'quantity': float(row['Quantity']) if row.get('Quantity') else None,
+                            'commission': float(row['Commission']) if row.get('Commission') else None,
+                            'memo': row.get('Notes', '').strip()
+                        }
+                        if trans['action'] and trans['date'] and trans['security']:
+                            self.transactions.append(trans)
+                    except (ValueError, KeyError):
+                        continue
             self.update_transaction_list()
             QMessageBox.information(self, "Success", "CSV file imported successfully")
         except Exception as e:
@@ -324,6 +331,9 @@ class QIFConverterGUI(QMainWindow):
             return
             
         try:
+            # Ensure directory exists
+            os.makedirs(os.path.dirname(filename) or '.', exist_ok=True)
+            
             with open(filename, 'w') as f:
                 f.write(f"{QIFType.INVESTMENT.value}\n")
                 for trans in self.transactions:
