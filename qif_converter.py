@@ -57,26 +57,32 @@ class QIFTransaction:
 class QIFInvestmentTransaction:
     date: str
     action: str  # Buy, Sell, BuyX, SellX, Div, IntInc
-    security: str
-    price: float
-    quantity: float
+    security: Optional[str] = None
+    price: Optional[float] = None
+    quantity: Optional[float] = None
     commission: Optional[float] = None
     memo: Optional[str] = None
     amount: Optional[float] = None
+    account: Optional[str] = None  # For transfer transactions
     
     def to_qif(self) -> str:
         lines = []
         lines.append(f"D{self.date}")
         lines.append(f"N{self.action}")
-        lines.append(f"Y{self.security}")
-        lines.append(f"I{self.price:.4f}")
-        lines.append(f"Q{self.quantity:.4f}")
+        if self.security:
+            lines.append(f"Y{self.security}")
+        if self.price is not None:
+            lines.append(f"I{self.price:.4f}")
+        if self.quantity is not None:
+            lines.append(f"Q{self.quantity:.4f}")
         if self.commission:
             lines.append(f"O{self.commission:.2f}")
+        if self.amount is not None:
+            lines.append(f"T{self.amount:.2f}")
+        if self.account:
+            lines.append(f"L[{self.account}]")
         if self.memo:
             lines.append(f"M{self.memo}")
-        if self.amount:
-            lines.append(f"T{self.amount:.2f}")
         lines.append("^")
         return "\n".join(lines)
 
@@ -96,7 +102,7 @@ def convert_date(date_str: str) -> str:
     """Convert various date formats to MM/DD/YYYY"""
     try:
         # Try different date formats
-        for fmt in ('%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y/%m/%d'):
+        for fmt in ('%Y-%m-%d', '%m/%d/%Y', '%d/%m/%Y', '%Y/%m/%d', '%d-%m-%Y'):
             try:
                 dt = datetime.strptime(date_str, fmt)
                 return dt.strftime('%m/%d/%Y')
@@ -115,7 +121,20 @@ def csv_to_qif(csv_file: str, qif_file: str, transaction_type: str, mapping: Dic
         qif_file: Output QIF file path
         transaction_type: Type of transactions ('cash', 'investment')
         mapping: Dictionary mapping CSV columns to QIF fields
+        
+    Raises:
+        KeyError: If required fields are missing in mapping
     """
+    # Validate required fields
+    required_fields = ['date']
+    if transaction_type == 'investment':
+        required_fields.extend(['action', 'security'])
+    else:
+        required_fields.append('amount')
+        
+    missing_fields = [field for field in required_fields if field not in mapping]
+    if missing_fields:
+        raise KeyError(f"Missing required fields in mapping: {', '.join(missing_fields)}")
     writer = QIFWriter(qif_file)
     
     # Set QIF type based on transaction type
@@ -127,15 +146,21 @@ def csv_to_qif(csv_file: str, qif_file: str, transaction_type: str, mapping: Dic
         for row in reader:
             try:
                 if transaction_type == 'investment':
+                    # Convert values safely
+                    price = float(row[mapping['price']]) if row.get(mapping['price']) else None
+                    quantity = float(row[mapping['quantity']]) if row.get(mapping['quantity']) else None
+                    commission = float(row[mapping['commission']]) if 'commission' in mapping and row.get(mapping['commission']) else None
+                    amount = float(row[mapping['amount']]) if 'amount' in mapping and row.get(mapping['amount']) else None
+                    
                     transaction = QIFInvestmentTransaction(
                         date=convert_date(row[mapping['date']]),
                         action=row[mapping['action']],
                         security=row[mapping['security']],
-                        price=float(row[mapping['price']]),
-                        quantity=float(row[mapping['quantity']]),
-                        commission=float(row[mapping['commission']]) if 'commission' in mapping else None,
+                        price=price,
+                        quantity=quantity,
+                        commission=commission,
                         memo=row[mapping['memo']] if 'memo' in mapping else None,
-                        amount=float(row[mapping['amount']]) if 'amount' in mapping else None
+                        amount=amount
                     )
                 else:
                     transaction = QIFTransaction(
