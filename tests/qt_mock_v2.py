@@ -74,18 +74,19 @@ class MockQLineEdit(MockQWidget):
     """Mock QLineEdit"""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._text = ""
+        self._text = None
         self._visible = True
         self.textChanged = QtSignal()
         self.returnPressed = QtSignal()
         self.editingFinished = QtSignal()
         
     def text(self):
-        return self._text
+        return self._text if self._text is not None else ""
     
     def setText(self, text):
-        self._text = str(text) if text is not None else ""
-        self.textChanged.emit(self._text)
+        self._text = str(text) if text is not None else None
+        self.textChanged.emit(self._text if self._text is not None else "")
+        self.editingFinished.emit()
         
     def setVisible(self, visible):
         self._visible = visible
