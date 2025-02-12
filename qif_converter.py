@@ -12,6 +12,23 @@ class QIFType(Enum):
     ASSET = "!Type:Oth A"
     LIABILITY = "!Type:Oth L"
 
+class InvestmentAction(Enum):
+    BUY = "Buy"         # Regular buy
+    SELL = "Sell"       # Regular sell
+    BUYX = "BuyX"       # Buy with transfer
+    SELLX = "SellX"     # Sell with transfer
+    DIV = "Div"         # Cash dividend
+    INTINC = "IntInc"   # Interest income
+    REINVDIV = "ReinvDiv"  # Reinvested dividend
+    SHRSIN = "ShrsIn"   # Shares transferred in
+    SHRSOUT = "ShrsOut" # Shares transferred out
+    STKSPLIT = "StkSplit"  # Stock split
+    CGLONG = "CGLong"   # Long-term capital gains
+    CGSHORT = "CGShort" # Short-term capital gains
+    MARGINT = "MargInt" # Margin interest
+    MISCINC = "MiscInc" # Miscellaneous income
+    MISCEXP = "MiscExp" # Miscellaneous expense
+
 @dataclass
 class QIFTransaction:
     date: str

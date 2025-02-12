@@ -1,15 +1,129 @@
 import sys
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                            QHBoxLayout, QLabel, QComboBox, QPushButton, 
-                           QFileDialog, QMessageBox, QLineEdit)
+                           QFileDialog, QMessageBox, QLineEdit, QDialog,
+                           QDialogButtonBox, QListWidget, QGroupBox, QGridLayout)
+from qif_converter import QIFType, InvestmentAction
 from PyQt6.QtCore import Qt
 from qif_converter import csv_to_qif
+
+class TransactionDialog(QDialog):
+    def __init__(self, parent=None, transaction_data=None):
+        super().__init__(parent)
+        self.setWindowTitle("Transaction Details")
+        self.setMinimumWidth(500)
+        layout = QVBoxLayout(self)
+        
+        # Transaction type selection
+        type_group = QGroupBox("Transaction Type")
+        type_layout = QVBoxLayout()
+        self.type_combo = QComboBox()
+        self.type_combo.addItems([action.value for action in InvestmentAction])
+        self.type_combo.currentTextChanged.connect(self.update_fields)
+        type_layout.addWidget(self.type_combo)
+        type_group.setLayout(type_layout)
+        layout.addWidget(type_group)
+        
+        # Fields group
+        fields_group = QGroupBox("Transaction Details")
+        self.fields_layout = QGridLayout()
+        fields_group.setLayout(self.fields_layout)
+        layout.addWidget(fields_group)
+        
+        # Create all possible fields
+        self.create_fields()
+        
+        # Buttons
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | 
+            QDialogButtonBox.StandardButton.Cancel)
+        button_box.accepted.connect(self.accept)
+        button_box.rejected.connect(self.reject)
+        layout.addWidget(button_box)
+        
+        # Fill data if editing
+        if transaction_data:
+            self.type_combo.setCurrentText(transaction_data['action'])
+            for field, value in transaction_data.items():
+                if field in self.fields and value is not None:
+                    self.fields[field].setText(str(value))
+        
+        self.update_fields(self.type_combo.currentText())
+    
+    def create_fields(self):
+        """Create all possible fields"""
+        self.fields = {}
+        field_defs = [
+            ('date', 'Date (MM/DD/YYYY):', 0),
+            ('security', 'Security/Symbol:', 1),
+            ('price', 'Price:', 2),
+            ('quantity', 'Quantity:', 3),
+            ('commission', 'Commission:', 4),
+            ('amount', 'Amount:', 5),
+            ('memo', 'Memo:', 6)
+        ]
+        
+        for field, label, row in field_defs:
+            label_widget = QLabel(label)
+            self.fields[field] = QLineEdit()
+            self.fields_layout.addWidget(label_widget, row, 0)
+            self.fields_layout.addWidget(self.fields[field], row, 1)
+    
+    def update_fields(self, action_type):
+        """Show/hide fields based on transaction type"""
+        # Default visible fields
+        visible_fields = {'date', 'memo'}
+        
+        # Add fields based on action type
+        if action_type in [InvestmentAction.BUY.value, InvestmentAction.SELL.value]:
+            visible_fields.update({'security', 'price', 'quantity', 'commission', 'amount'})
+        
+        elif action_type in [InvestmentAction.DIV.value, InvestmentAction.INTINC.value,
+                           InvestmentAction.CGLONG.value, InvestmentAction.CGSHORT.value]:
+            visible_fields.update({'security', 'amount'})
+        
+        elif action_type == InvestmentAction.REINVDIV.value:
+            visible_fields.update({'security', 'price', 'quantity', 'amount'})
+        
+        elif action_type in [InvestmentAction.SHRSIN.value, InvestmentAction.SHRSOUT.value]:
+            visible_fields.update({'security', 'quantity', 'price'})
+        
+        elif action_type == InvestmentAction.STKSPLIT.value:
+            visible_fields.update({'security', 'quantity'})
+        
+        # Show/hide fields
+        for field, widget in self.fields.items():
+            widget.setVisible(field in visible_fields)
+            self.fields_layout.itemAtPosition(
+                list(self.fields.keys()).index(field), 0
+            ).widget().setVisible(field in visible_fields)
+    
+    def get_data(self):
+        """Get the transaction data"""
+        data = {
+            'action': self.type_combo.currentText(),
+            'date': self.fields['date'].text()
+        }
+        
+        # Add other fields if they're visible and not empty
+        for field, widget in self.fields.items():
+            if widget.isVisible() and widget.text():
+                if field in ['price', 'quantity', 'commission', 'amount']:
+                    try:
+                        data[field] = float(widget.text())
+                    except ValueError:
+                        pass
+                else:
+                    data[field] = widget.text()
+        
+        return data
 
 class QIFConverterGUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("CSV to QIF Converter")
-        self.setMinimumWidth(600)
+        self.setMinimumWidth(800)
+        self.transactions = []
         
         # Main widget and layout
         main_widget = QWidget()
