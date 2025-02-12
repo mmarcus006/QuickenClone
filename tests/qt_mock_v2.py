@@ -57,6 +57,7 @@ class MockQDialog(MockQWidget):
         self.rejected = QtSignal()
         
     def exec(self):
+        self.result = True
         self.accepted.emit()
         return True
     
@@ -156,6 +157,8 @@ class MockQFileDialog:
             directory = "/tmp/test.qif"
         if not directory.lower().endswith('.qif'):
             directory += '.qif'
+        # Create parent directory
+        os.makedirs(os.path.dirname(directory) or '.', exist_ok=True)
         return directory, filter
 
 class MockQMessageBox:

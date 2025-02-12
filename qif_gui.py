@@ -128,10 +128,11 @@ class TransactionDialog(QDialog):
                         except ValueError:
                             pass
                     else:
-                        data[field] = text
+                        if text:
+                            data[field] = text
         
         # Validate required fields
-        if not all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
+        if not all(k in data and data[k] and str(data[k]).strip() for k in ['date', 'action', 'security']):
             return None
         
         return data
