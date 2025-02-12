@@ -79,7 +79,7 @@ class MockQLineEdit(MockQWidget):
         self.textChanged = QtSignal()
         
     def text(self):
-        return self._text
+        return self._text if self._text is not None else ""
     
     def setText(self, text):
         self._text = str(text) if text is not None else ""
