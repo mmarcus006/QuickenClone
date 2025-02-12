@@ -1,4 +1,5 @@
 import sys
+import os
 import csv
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                            QHBoxLayout, QLabel, QComboBox, QPushButton, 
@@ -194,7 +195,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and data.get('security') and data.get('date'):
+            if data and data.get('date'):
                 self.transactions.append(data)
                 self.update_transaction_list()
     
