@@ -1,11 +1,11 @@
 import sys
+import csv
 from PyQt6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                            QHBoxLayout, QLabel, QComboBox, QPushButton, 
                            QFileDialog, QMessageBox, QLineEdit, QDialog,
                            QDialogButtonBox, QListWidget, QGroupBox, QGridLayout)
-from qif_converter import QIFType, InvestmentAction
 from PyQt6.QtCore import Qt
-from qif_converter import csv_to_qif
+from qif_converter import QIFType, InvestmentAction, csv_to_qif
 
 class TransactionDialog(QDialog):
     def __init__(self, parent=None, transaction_data=None):
@@ -171,46 +171,6 @@ class QIFConverterGUI(QMainWindow):
         convert_layout.addWidget(import_button)
         convert_layout.addWidget(export_button)
         layout.addLayout(convert_layout)
-        
-        # Main widget and layout
-        main_widget = QWidget()
-        self.setCentralWidget(main_widget)
-        layout = QVBoxLayout(main_widget)
-        
-        # Transaction type selection
-        type_layout = QHBoxLayout()
-        type_label = QLabel("Transaction Type:")
-        self.type_combo = QComboBox()
-        self.type_combo.addItems(["Investment", "Cash"])
-        self.type_combo.currentTextChanged.connect(self.update_mapping_fields)
-        type_layout.addWidget(type_label)
-        type_layout.addWidget(self.type_combo)
-        type_layout.addStretch()
-        layout.addLayout(type_layout)
-        
-        # File selection
-        file_layout = QHBoxLayout()
-        self.input_file = QLineEdit()
-        self.input_file.setPlaceholderText("Select input CSV file...")
-        self.input_file.setReadOnly(True)
-        browse_button = QPushButton("Browse")
-        browse_button.clicked.connect(self.browse_input)
-        file_layout.addWidget(self.input_file)
-        file_layout.addWidget(browse_button)
-        layout.addLayout(file_layout)
-        
-        # Field mapping section
-        mapping_label = QLabel("Field Mapping:")
-        layout.addWidget(mapping_label)
-        
-        self.mapping_widgets = {}
-        self.mapping_layout = QVBoxLayout()
-        layout.addLayout(self.mapping_layout)
-        
-        # Convert button
-        convert_button = QPushButton("Convert to QIF")
-        convert_button.clicked.connect(self.convert_file)
-        layout.addWidget(convert_button)
         
         # Initialize mapping fields
         self.update_mapping_fields()
