@@ -132,10 +132,9 @@ class TransactionDialog(QDialog):
         if not data.get('security'):
             data['security'] = self.fields['security'].text().strip()
         
-        # Convert empty strings to None
-        for k, v in data.items():
-            if isinstance(v, str) and not v.strip():
-                data[k] = None
+        # Validate required fields
+        if not all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
+            return None
         
         return data
 
@@ -318,6 +317,7 @@ class QIFConverterGUI(QMainWindow):
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
             
+            # Create the file
             with open(filename, 'w') as f:
                 f.write(f"{QIFType.INVESTMENT.value}\n")
                 for trans in self.transactions:
@@ -339,6 +339,8 @@ class QIFConverterGUI(QMainWindow):
                     if trans.get('memo'):
                         f.write(f"M{trans['memo']}\n")
                 f.write("^\n")  # End last transaction
+                f.flush()
+                os.fsync(f.fileno())
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error exporting to QIF: {str(e)}")
