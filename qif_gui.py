@@ -73,38 +73,39 @@ class TransactionDialog(QDialog):
     def update_fields(self, action_type):
         """Show/hide fields based on transaction type"""
         # Default visible fields
-        visible_fields = {'date', 'memo'}
+        visible_fields = {'date', 'memo', 'security', 'amount'}  # Security and amount always visible
         
         # Add fields based on action type
         if action_type in [InvestmentAction.BUY.value, InvestmentAction.SELL.value]:
-            visible_fields.update({'security', 'price', 'quantity', 'commission', 'amount'})
+            visible_fields.update({'price', 'quantity', 'commission'})
         
         elif action_type in [InvestmentAction.BUYX.value, InvestmentAction.SELLX.value]:
-            visible_fields.update({'security', 'price', 'quantity', 'commission', 'amount', 'account'})
+            visible_fields.update({'price', 'quantity', 'account'})
         
         elif action_type in [InvestmentAction.DIV.value, InvestmentAction.INTINC.value,
                            InvestmentAction.CGLONG.value, InvestmentAction.CGSHORT.value]:
-            visible_fields.update({'security', 'amount'})
+            pass  # Only default fields
         
         elif action_type == InvestmentAction.REINVDIV.value:
-            visible_fields.update({'security', 'price', 'quantity', 'amount'})
+            visible_fields.update({'price', 'quantity'})
         
         elif action_type in [InvestmentAction.SHRSIN.value, InvestmentAction.SHRSOUT.value]:
-            visible_fields.update({'security', 'quantity', 'price', 'account'})
+            visible_fields.update({'quantity', 'price', 'account'})
         
         elif action_type == InvestmentAction.STKSPLIT.value:
-            visible_fields.update({'security', 'quantity'})
+            visible_fields.update({'quantity'})
         
         elif action_type in [InvestmentAction.MARGINT.value, InvestmentAction.MISCINC.value,
                            InvestmentAction.MISCEXP.value]:
-            visible_fields.update({'amount', 'security'})
+            pass  # Only default fields
         
         # Show/hide fields
         for field, widget in self.fields.items():
             widget.setVisible(field in visible_fields)
-            self.fields_layout.itemAtPosition(
+            label = self.fields_layout.itemAtPosition(
                 list(self.fields.keys()).index(field), 0
-            ).widget().setVisible(field in visible_fields)
+            ).widget()
+            label.setVisible(field in visible_fields)
     
     def get_data(self):
         """Get the transaction data"""
@@ -125,6 +126,8 @@ class TransactionDialog(QDialog):
                             pass
                     else:
                         data[field] = widget.text()
+                elif field == 'security' and not widget.text():
+                    data['security'] = ''  # Ensure empty string for security
         
         return data
 
@@ -205,6 +208,9 @@ class QIFConverterGUI(QMainWindow):
             return
             
         idx = self.transaction_list.currentRow()
+        if idx < 0 or idx >= len(self.transactions):
+            return
+            
         data = self.transactions[idx].copy()
         
         # Create a simplified dialog for quick date change
@@ -243,7 +249,8 @@ class QIFConverterGUI(QMainWindow):
             date_dialog.reject()
             dialog = TransactionDialog(self, data)
             if dialog.exec():
-                self.transactions.append(dialog.get_data())
+                new_data = dialog.get_data()
+                self.transactions.append(new_data)
                 self.update_transaction_list()
         
         edit_all_button.clicked.connect(handle_edit_all)
@@ -261,8 +268,9 @@ class QIFConverterGUI(QMainWindow):
         if not self.transaction_list.currentItem():
             return
         idx = self.transaction_list.currentRow()
-        if idx >= 0:
+        if idx >= 0 and idx < len(self.transactions):
             del self.transactions[idx]
+            self.transaction_list.clear()
             self.update_transaction_list()
     
     def update_transaction_list(self):
