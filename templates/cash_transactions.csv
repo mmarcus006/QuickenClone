@@ -1,0 +1,7 @@
+Date,Amount,Description,Category,Notes,Check Number
+2024-01-01,1500.00,Salary Deposit,Income:Salary,Monthly salary,
+2024-01-05,-75.50,Grocery Store,Expenses:Groceries,Weekly groceries,
+2024-01-10,-150.00,Electric Company,Utilities:Electric,January bill,2051
+2024-01-15,-500.00,Rent Payment,Housing:Rent,Monthly rent,2052
+2024-01-20,50.00,Friend Payment,Income:Misc,Split dinner repayment,
+2024-01-25,-45.99,Gas Station,Auto:Fuel,Car refuel,
