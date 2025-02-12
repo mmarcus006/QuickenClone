@@ -58,6 +58,13 @@ def main():
         mapping.update(custom_mapping)
     
     try:
+        with open(args.input_file, 'r') as f:
+            # Try reading first line to validate CSV format
+            header = f.readline().strip().split(',')
+            if not all(field in header for field in mapping.values()):
+                print(f"Error: CSV headers do not match mapping: {header}")
+                exit(1)
+        
         csv_to_qif(args.input_file, args.output_file, args.type, mapping)
         print(f"Successfully converted {args.input_file} to {args.output_file}")
     except Exception as e:
