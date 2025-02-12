@@ -200,7 +200,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
+            if data:
                 self.transactions.append(data)
                 self.update_transaction_list()
     
@@ -312,6 +312,11 @@ class QIFConverterGUI(QMainWindow):
             # Ensure file has .qif extension
             if not filename.lower().endswith('.qif'):
                 filename += '.qif'
+            
+            # Create parent directory if it doesn't exist
+            dirname = os.path.dirname(filename)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
             
             with open(filename, 'w') as f:
                 f.write(f"{QIFType.INVESTMENT.value}\n")
