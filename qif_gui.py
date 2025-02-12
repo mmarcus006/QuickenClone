@@ -199,12 +199,59 @@ class QIFConverterGUI(QMainWindow):
     
     def duplicate_transaction(self):
         if not self.transaction_list.currentItem():
+            QMessageBox.warning(self, "Error", "Please select a transaction to duplicate")
             return
+            
         idx = self.transaction_list.currentRow()
         data = self.transactions[idx].copy()
-        dialog = TransactionDialog(self, data)
-        if dialog.exec():
-            self.transactions.append(dialog.get_data())
+        
+        # Create a simplified dialog for quick date change
+        date_dialog = QDialog(self)
+        date_dialog.setWindowTitle("Duplicate Transaction")
+        date_dialog.setMinimumWidth(300)
+        
+        layout = QVBoxLayout(date_dialog)
+        
+        # Add description of what's being duplicated
+        desc_label = QLabel(f"Duplicating: {self.transaction_list.currentItem().text()}")
+        desc_label.setWordWrap(True)
+        layout.addWidget(desc_label)
+        
+        # Date input
+        date_group = QGroupBox("New Date")
+        date_layout = QHBoxLayout()
+        date_input = QLineEdit(data.get('date', ''))
+        date_input.setPlaceholderText("MM/DD/YYYY")
+        date_layout.addWidget(date_input)
+        date_group.setLayout(date_layout)
+        layout.addWidget(date_group)
+        
+        # Buttons
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | 
+            QDialogButtonBox.StandardButton.Cancel)
+        
+        # Add "Edit All Fields" button
+        edit_all_button = QPushButton("Edit All Fields...")
+        button_box.addButton(edit_all_button, QDialogButtonBox.ButtonRole.ActionRole)
+        
+        layout.addWidget(button_box)
+        
+        def handle_edit_all():
+            date_dialog.reject()
+            dialog = TransactionDialog(self, data)
+            if dialog.exec():
+                self.transactions.append(dialog.get_data())
+                self.update_transaction_list()
+        
+        edit_all_button.clicked.connect(handle_edit_all)
+        button_box.accepted.connect(date_dialog.accept)
+        button_box.rejected.connect(date_dialog.reject)
+        
+        if date_dialog.exec():
+            # Quick duplicate with just date change
+            data['date'] = date_input.text()
+            self.transactions.append(data)
             self.update_transaction_list()
     
     def delete_transaction(self):
