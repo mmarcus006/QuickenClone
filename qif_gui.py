@@ -285,6 +285,11 @@ class QIFConverterGUI(QMainWindow):
             return
             
         try:
+            # Create parent directory if it doesn't exist
+            dirname = os.path.dirname(filename)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
+            
             with open(filename, 'w') as f:
                 f.write(f"{QIFType.INVESTMENT.value}\n")
                 for trans in self.transactions:
