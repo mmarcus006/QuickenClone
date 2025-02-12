@@ -59,7 +59,7 @@ class MockQDialog(MockQWidget):
     def exec(self):
         self.result = True
         self.accepted.emit()
-        return True
+        return self.result
     
     def accept(self):
         self.result = True
@@ -74,17 +74,18 @@ class MockQLineEdit(MockQWidget):
     """Mock QLineEdit"""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._text = None
+        self._text = ""
         self._visible = True
         self.textChanged = QtSignal()
+        self.returnPressed = QtSignal()
+        self.editingFinished = QtSignal()
         
     def text(self):
-        return self._text if self._text is not None else ""
+        return self._text
     
     def setText(self, text):
         self._text = str(text) if text is not None else ""
         self.textChanged.emit(self._text)
-        return True
         
     def setVisible(self, visible):
         self._visible = visible
@@ -151,6 +152,10 @@ class MockQFileDialog:
     
     @staticmethod
     def getSaveFileName(parent=None, caption="", directory="", filter=""):
+        if not directory:
+            directory = "/tmp/test.qif"
+        if not directory.lower().endswith('.qif'):
+            directory += '.qif'
         return directory, filter
 
 class MockQMessageBox:

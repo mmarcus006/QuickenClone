@@ -199,7 +199,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data:
+            if data and all(k in data and data[k] for k in ['date', 'action', 'security']):
                 self.transactions.append(data)
                 self.update_transaction_list()
     
