@@ -60,7 +60,8 @@ class TransactionDialog(QDialog):
             ('quantity', 'Quantity:', 3),
             ('commission', 'Commission:', 4),
             ('amount', 'Amount:', 5),
-            ('memo', 'Memo:', 6)
+            ('account', 'Transfer Account:', 6),
+            ('memo', 'Memo:', 7)
         ]
         
         for field, label, row in field_defs:
@@ -78,6 +79,9 @@ class TransactionDialog(QDialog):
         if action_type in [InvestmentAction.BUY.value, InvestmentAction.SELL.value]:
             visible_fields.update({'security', 'price', 'quantity', 'commission', 'amount'})
         
+        elif action_type in [InvestmentAction.BUYX.value, InvestmentAction.SELLX.value]:
+            visible_fields.update({'security', 'price', 'quantity', 'commission', 'amount', 'account'})
+        
         elif action_type in [InvestmentAction.DIV.value, InvestmentAction.INTINC.value,
                            InvestmentAction.CGLONG.value, InvestmentAction.CGSHORT.value]:
             visible_fields.update({'security', 'amount'})
@@ -86,10 +90,14 @@ class TransactionDialog(QDialog):
             visible_fields.update({'security', 'price', 'quantity', 'amount'})
         
         elif action_type in [InvestmentAction.SHRSIN.value, InvestmentAction.SHRSOUT.value]:
-            visible_fields.update({'security', 'quantity', 'price'})
+            visible_fields.update({'security', 'quantity', 'price', 'account'})
         
         elif action_type == InvestmentAction.STKSPLIT.value:
             visible_fields.update({'security', 'quantity'})
+        
+        elif action_type in [InvestmentAction.MARGINT.value, InvestmentAction.MISCINC.value,
+                           InvestmentAction.MISCEXP.value]:
+            visible_fields.update({'amount', 'security'})
         
         # Show/hide fields
         for field, widget in self.fields.items():
@@ -268,6 +276,8 @@ class QIFConverterGUI(QMainWindow):
                         f.write(f"O{trans['commission']:.2f}\n")
                     if trans.get('amount'):
                         f.write(f"T{trans['amount']:.2f}\n")
+                    if trans.get('account'):
+                        f.write(f"L[{trans['account']}]\n")
                     if trans.get('memo'):
                         f.write(f"M{trans['memo']}\n")
                     f.write("^\n")
