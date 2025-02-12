@@ -55,7 +55,9 @@ class MockQDialog(MockQWidget):
         self.rejected = QtSignal()
         
     def exec(self):
-        return self.result
+        self.result = True
+        self.accepted.emit()
+        return True
     
     def accept(self):
         self.result = True
@@ -129,11 +131,13 @@ class MockQListWidget(MockQWidget):
     def currentItem(self):
         if 0 <= self._current_row < len(self.items):
             return self.items[self._current_row]
-        return None
+        return self.items[0] if self.items else None
     
     def setCurrentRow(self, row):
+        self._current_row = row
         if 0 <= row < len(self.items):
-            self._current_row = row
+            return True
+        return False
 
 class MockQFileDialog:
     """Mock QFileDialog"""

@@ -195,7 +195,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and data.get('date'):
+            if data and data.get('date') and data.get('action'):
                 self.transactions.append(data)
                 self.update_transaction_list()
     
@@ -271,8 +271,6 @@ class QIFConverterGUI(QMainWindow):
     
     def delete_transaction(self):
         """Delete the selected transaction"""
-        if not self.transaction_list.currentItem():
-            return
         idx = self.transaction_list.currentRow()
         if idx >= 0 and idx < len(self.transactions):
             self.transactions.pop(idx)
