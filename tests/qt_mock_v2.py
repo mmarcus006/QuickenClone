@@ -59,7 +59,7 @@ class MockQDialog(MockQWidget):
     def exec(self):
         self.result = True
         self.accepted.emit()
-        return True
+        return self.result
     
     def accept(self):
         self.result = True
@@ -151,7 +151,11 @@ class MockQFileDialog:
     
     @staticmethod
     def getSaveFileName(parent=None, caption="", directory="", filter=""):
-        return directory or "/tmp/test.qif", filter
+        if not directory:
+            directory = "/tmp/test.qif"
+        if not directory.lower().endswith('.qif'):
+            directory += '.qif'
+        return directory, filter
 
 class MockQMessageBox:
     """Mock QMessageBox"""
