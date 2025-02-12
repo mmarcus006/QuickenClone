@@ -55,6 +55,7 @@ class MockQDialog(MockQWidget):
         self.rejected = QtSignal()
         
     def exec(self):
+        self.result = True
         self.accepted.emit()
         return True
     
@@ -132,7 +133,7 @@ class MockQListWidget(MockQWidget):
             return None
         if 0 <= self._current_row < len(self.items):
             return self.items[self._current_row]
-        return None
+        return self.items[0] if self.items else None
     
     def setCurrentRow(self, row):
         self._current_row = row
