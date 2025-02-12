@@ -126,8 +126,10 @@ class TransactionDialog(QDialog):
                             pass
                     else:
                         data[field] = widget.text()
-                elif field == 'security' and not widget.text():
-                    data['security'] = ''  # Ensure empty string for security
+        
+        # Ensure security field is always included
+        if not data['security']:
+            data['security'] = ''
         
         return data
 
@@ -250,8 +252,9 @@ class QIFConverterGUI(QMainWindow):
             dialog = TransactionDialog(self, data)
             if dialog.exec():
                 new_data = dialog.get_data()
-                self.transactions.append(new_data)
-                self.update_transaction_list()
+                if new_data:
+                    self.transactions.append(new_data)
+                    self.update_transaction_list()
         
         edit_all_button.clicked.connect(handle_edit_all)
         button_box.accepted.connect(date_dialog.accept)
@@ -260,8 +263,9 @@ class QIFConverterGUI(QMainWindow):
         if date_dialog.exec():
             # Quick duplicate with just date change
             data['date'] = date_input.text()
-            self.transactions.append(data)
-            self.update_transaction_list()
+            if data['date']:
+                self.transactions.append(data)
+                self.update_transaction_list()
     
     def delete_transaction(self):
         """Delete the selected transaction"""
