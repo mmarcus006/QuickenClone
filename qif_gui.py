@@ -308,6 +308,10 @@ class QIFConverterGUI(QMainWindow):
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
             
+            # Ensure file has .qif extension
+            if not filename.lower().endswith('.qif'):
+                filename += '.qif'
+            
             with open(filename, 'w') as f:
                 f.write(f"{QIFType.INVESTMENT.value}\n")
                 for trans in self.transactions:

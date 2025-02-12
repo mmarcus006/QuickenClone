@@ -57,8 +57,7 @@ class MockQDialog(MockQWidget):
         self.rejected = QtSignal()
         
     def exec(self):
-        self.accepted.emit()
-        self.result = True
+        self.accept()
         return True
     
     def accept(self):
@@ -68,6 +67,7 @@ class MockQDialog(MockQWidget):
     def reject(self):
         self.result = False
         self.rejected.emit()
+        return False
 
 class MockQLineEdit(MockQWidget):
     """Mock QLineEdit"""
