@@ -129,9 +129,11 @@ class MockQListWidget(MockQWidget):
         return self._current_row
     
     def currentItem(self):
+        if not self.items:
+            return None
         if 0 <= self._current_row < len(self.items):
             return self.items[self._current_row]
-        return self.items[0] if self.items else None
+        return None
     
     def setCurrentRow(self, row):
         self._current_row = row

@@ -118,9 +118,8 @@ def test_import_csv(gui, tmp_path):
     os.makedirs(tmp_path, exist_ok=True)
     csv_file = str(tmp_path / "test.csv")
     with open(csv_file, "w") as f:
-        f.write("""Transaction Type,Trade Date,Symbol,Price,Quantity,Commission,Notes
-Buy,01/15/2024,AAPL,185.92,10,4.95,Test buy
-""")
+        f.write("Transaction Type,Trade Date,Symbol,Price,Quantity,Commission,Notes\n")
+        f.write("Buy,01/15/2024,AAPL,185.92,10,4.95,Test buy\n")
     
     with patch('qif_gui.QFileDialog.getOpenFileName', return_value=(csv_file, "CSV files (*.csv)")):
         gui.import_csv()
