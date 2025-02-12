@@ -5,11 +5,13 @@ class QtSignal:
     """Mock Qt signal"""
     def __init__(self):
         self.callbacks = []
+        self.last_value = None
     
     def connect(self, callback):
         self.callbacks.append(callback)
     
     def emit(self, *args, **kwargs):
+        self.last_value = args[0] if args else None
         for callback in self.callbacks:
             callback(*args, **kwargs)
 
@@ -75,7 +77,7 @@ class MockQLineEdit(MockQWidget):
         self.textChanged = QtSignal()
         
     def text(self):
-        return self._text or ""
+        return self._text
     
     def setText(self, text):
         self._text = str(text) if text is not None else ""
@@ -128,8 +130,6 @@ class MockQListWidget(MockQWidget):
         return self._current_row
     
     def currentItem(self):
-        if not self.items:
-            return None
         if 0 <= self._current_row < len(self.items):
             return self.items[self._current_row]
         return self.items[0] if self.items else None
@@ -144,11 +144,11 @@ class MockQFileDialog:
     """Mock QFileDialog"""
     @staticmethod
     def getOpenFileName(parent=None, caption="", directory="", filter=""):
-        return directory, filter
+        return directory or "test.csv", filter
     
     @staticmethod
     def getSaveFileName(parent=None, caption="", directory="", filter=""):
-        return directory, filter
+        return directory or "test.qif", filter
 
 class MockQMessageBox:
     """Mock QMessageBox"""

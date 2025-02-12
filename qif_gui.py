@@ -264,7 +264,7 @@ class QIFConverterGUI(QMainWindow):
                             'commission': float(row['Commission']) if row.get('Commission') else None,
                             'memo': row.get('Notes', '').strip()
                         }
-                        if all(trans.get(k) and trans[k] for k in ['action', 'date', 'security']):
+                        if trans['action'] and trans['date'] and trans['security']:
                             self.transactions.append(trans)
                     except (ValueError, KeyError) as e:
                         print(f"Error processing row: {e}")
@@ -310,6 +310,7 @@ class QIFConverterGUI(QMainWindow):
                         f.write(f"L[{trans['account']}]\n")
                     if trans.get('memo'):
                         f.write(f"M{trans['memo']}\n")
+                f.write("^\n")  # End last transaction
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error exporting to QIF: {str(e)}")
