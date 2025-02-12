@@ -110,19 +110,21 @@ class TransactionDialog(QDialog):
         """Get the transaction data"""
         data = {
             'action': self.type_combo.currentText(),
-            'date': self.fields['date'].text()
+            'date': self.fields['date'].text(),
+            'security': self.fields['security'].text()
         }
         
         # Add other fields if they're visible and not empty
         for field, widget in self.fields.items():
-            if widget.isVisible() and widget.text():
-                if field in ['price', 'quantity', 'commission', 'amount']:
-                    try:
-                        data[field] = float(widget.text())
-                    except ValueError:
-                        pass
-                else:
-                    data[field] = widget.text()
+            if field not in ('date', 'security', 'action'):  # Already added
+                if widget.isVisible() and widget.text():
+                    if field in ('price', 'quantity', 'commission', 'amount'):
+                        try:
+                            data[field] = float(widget.text())
+                        except ValueError:
+                            pass
+                    else:
+                        data[field] = widget.text()
         
         return data
 
@@ -255,11 +257,13 @@ class QIFConverterGUI(QMainWindow):
             self.update_transaction_list()
     
     def delete_transaction(self):
+        """Delete the selected transaction"""
         if not self.transaction_list.currentItem():
             return
         idx = self.transaction_list.currentRow()
-        self.transactions.pop(idx)
-        self.update_transaction_list()
+        if idx >= 0:
+            del self.transactions[idx]
+            self.update_transaction_list()
     
     def update_transaction_list(self):
         self.transaction_list.clear()
