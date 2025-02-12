@@ -18,7 +18,7 @@ class MockQWidget:
     def __init__(self, parent=None):
         self.parent = parent
         self.layout = None
-        self.visible = True
+        self._visible = True
         self.window_title = ""
         self.minimum_width = 0
         
@@ -26,10 +26,10 @@ class MockQWidget:
         self.layout = layout
     
     def setVisible(self, visible):
-        self.visible = visible
+        self._visible = visible
     
     def isVisible(self):
-        return self.visible
+        return self._visible
     
     def setWindowTitle(self, title):
         self.window_title = title
@@ -70,6 +70,7 @@ class MockQLineEdit(MockQWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._text = ""
+        self._visible = True
         self.textChanged = QtSignal()
         
     def text(self):
@@ -79,8 +80,11 @@ class MockQLineEdit(MockQWidget):
         self._text = text
         self.textChanged.emit(text)
         
-    def setPlaceholderText(self, text):
-        pass
+    def setVisible(self, visible):
+        self._visible = visible
+        
+    def isVisible(self):
+        return self._visible
 
 class MockQComboBox(MockQWidget):
     """Mock QComboBox"""
@@ -145,10 +149,24 @@ class MockQMessageBox:
     """Mock QMessageBox"""
     Yes = 1
     No = 0
+    Ok = 2
+    Cancel = 3
     
     @staticmethod
     def question(parent=None, title="", text="", buttons=None, defaultButton=None):
         return MockQMessageBox.Yes
+    
+    @staticmethod
+    def warning(parent=None, title="", text=""):
+        return MockQMessageBox.Ok
+    
+    @staticmethod
+    def information(parent=None, title="", text=""):
+        return MockQMessageBox.Ok
+    
+    @staticmethod
+    def critical(parent=None, title="", text=""):
+        return MockQMessageBox.Ok
 
 class MockQVBoxLayout:
     """Mock QVBoxLayout"""

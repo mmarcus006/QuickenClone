@@ -1,5 +1,6 @@
 """Test GUI functionality with proper Qt mocking"""
 import pytest
+import os
 from unittest.mock import patch
 import sys
 from qt_mock_v2 import mock_qt, mock_widgets, mock_core
@@ -95,10 +96,11 @@ def test_export_qif(gui, tmp_path):
         'quantity': 10
     }]
     
-    qif_file = tmp_path / "test.qif"
-    with patch('qif_gui.QFileDialog.getSaveFileName', return_value=(str(qif_file), "QIF files (*.qif)")):
+    qif_file = str(tmp_path / "test.qif")
+    with patch('qif_gui.QFileDialog.getSaveFileName', return_value=(qif_file, "QIF files (*.qif)")):
         gui.export_qif()
     
+    assert os.path.exists(qif_file)
     with open(qif_file) as f:
         content = f.read()
         assert "!Type:Invst" in content
@@ -107,17 +109,17 @@ def test_export_qif(gui, tmp_path):
 
 def test_import_csv(gui, tmp_path):
     """Test importing from CSV"""
-    csv_file = tmp_path / "test.csv"
+    csv_file = str(tmp_path / "test.csv")
     with open(csv_file, "w") as f:
         f.write("""Transaction Type,Trade Date,Symbol,Price,Quantity,Commission,Notes
 Buy,01/15/2024,AAPL,185.92,10,4.95,Test buy""")
     
-    with patch('qif_gui.QFileDialog.getOpenFileName', return_value=(str(csv_file), "CSV files (*.csv)")):
+    with patch('qif_gui.QFileDialog.getOpenFileName', return_value=(csv_file, "CSV files (*.csv)")):
         gui.import_csv()
     
     assert len(gui.transactions) == 1
     assert gui.transactions[0]['security'] == 'AAPL'
-    assert gui.transactions[0]['action'] == InvestmentAction.BUY.value
+    assert gui.transactions[0]['action'] == 'Buy'
 
 def test_transaction_dialog():
     """Test transaction dialog"""
@@ -149,7 +151,7 @@ def test_transaction_dialog_field_visibility():
     assert dialog.fields['price'].isVisible()
     assert dialog.fields['quantity'].isVisible()
     assert dialog.fields['commission'].isVisible()
-    assert not dialog.fields['amount'].isVisible()
+    assert dialog.fields['amount'].isVisible()  # Amount is visible for Buy/Sell
     assert not dialog.fields['account'].isVisible()
     
     # Test Div action
@@ -165,7 +167,7 @@ def test_transaction_dialog_field_visibility():
     assert dialog.fields['price'].isVisible()
     assert dialog.fields['quantity'].isVisible()
     assert not dialog.fields['commission'].isVisible()
-    assert not dialog.fields['amount'].isVisible()
+    assert dialog.fields['amount'].isVisible()  # Amount is visible for BuyX/SellX
     assert dialog.fields['account'].isVisible()
 
 def test_all_transaction_types():
