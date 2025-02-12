@@ -1,4 +1,5 @@
 """Mock Qt classes for testing"""
+import os
 from unittest.mock import MagicMock
 
 class QtSignal:
@@ -158,7 +159,9 @@ class MockQFileDialog:
         if not directory.lower().endswith('.qif'):
             directory += '.qif'
         # Create parent directory
-        os.makedirs(os.path.dirname(directory) or '.', exist_ok=True)
+        dirname = os.path.dirname(directory)
+        if dirname:
+            os.makedirs(dirname, exist_ok=True)
         return directory, filter
 
 class MockQMessageBox:
