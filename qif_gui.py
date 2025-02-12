@@ -136,6 +136,11 @@ class TransactionDialog(QDialog):
         if not all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
             return None
         
+        # Convert empty strings to None
+        for k, v in data.items():
+            if isinstance(v, str) and not v.strip():
+                data[k] = None
+        
         return data
 
 class QIFConverterGUI(QMainWindow):

@@ -147,11 +147,11 @@ class MockQFileDialog:
     """Mock QFileDialog"""
     @staticmethod
     def getOpenFileName(parent=None, caption="", directory="", filter=""):
-        return directory or "test.csv", filter
+        return directory or "/tmp/test.csv", filter
     
     @staticmethod
     def getSaveFileName(parent=None, caption="", directory="", filter=""):
-        return directory or "test.qif", filter
+        return directory or "/tmp/test.qif", filter
 
 class MockQMessageBox:
     """Mock QMessageBox"""
