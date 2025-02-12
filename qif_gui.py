@@ -195,7 +195,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and data.get('date') and data.get('action'):
+            if data and all(data.get(k) for k in ['date', 'action', 'security']):
                 self.transactions.append(data)
                 self.update_transaction_list()
     
@@ -216,57 +216,11 @@ class QIFConverterGUI(QMainWindow):
             return
             
         data = self.transactions[idx].copy()
-        
-        # Create a simplified dialog for quick date change
-        date_dialog = QDialog(self)
-        date_dialog.setWindowTitle("Duplicate Transaction")
-        date_dialog.setMinimumWidth(300)
-        
-        layout = QVBoxLayout(date_dialog)
-        
-        # Add description of what's being duplicated
-        desc_label = QLabel(f"Duplicating: {self.transaction_list.currentItem().text()}")
-        desc_label.setWordWrap(True)
-        layout.addWidget(desc_label)
-        
-        # Date input
-        date_group = QGroupBox("New Date")
-        date_layout = QHBoxLayout()
-        date_input = QLineEdit(data.get('date', ''))
-        date_input.setPlaceholderText("MM/DD/YYYY")
-        date_layout.addWidget(date_input)
-        date_group.setLayout(date_layout)
-        layout.addWidget(date_group)
-        
-        # Buttons
-        button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | 
-            QDialogButtonBox.StandardButton.Cancel)
-        
-        # Add "Edit All Fields" button
-        edit_all_button = QPushButton("Edit All Fields...")
-        button_box.addButton(edit_all_button, QDialogButtonBox.ButtonRole.ActionRole)
-        
-        layout.addWidget(button_box)
-        
-        def handle_edit_all():
-            date_dialog.reject()
-            dialog = TransactionDialog(self, data)
-            if dialog.exec():
-                new_data = dialog.get_data()
-                if new_data:
-                    self.transactions.append(new_data)
-                    self.update_transaction_list()
-        
-        edit_all_button.clicked.connect(handle_edit_all)
-        button_box.accepted.connect(date_dialog.accept)
-        button_box.rejected.connect(date_dialog.reject)
-        
-        if date_dialog.exec():
-            # Quick duplicate with just date change
-            data['date'] = date_input.text()
-            if data['date']:
-                self.transactions.append(data)
+        dialog = TransactionDialog(self, data)
+        if dialog.exec():
+            new_data = dialog.get_data()
+            if new_data and new_data.get('date') and new_data.get('action'):
+                self.transactions.append(new_data)
                 self.update_transaction_list()
     
     def delete_transaction(self):
@@ -304,15 +258,16 @@ class QIFConverterGUI(QMainWindow):
                         trans = {
                             'action': row['Transaction Type'].strip(),
                             'date': row['Trade Date'].strip(),
-                            'security': row.get('Symbol', '').strip(),
+                            'security': row['Symbol'].strip(),
                             'price': float(row['Price']) if row.get('Price') else None,
                             'quantity': float(row['Quantity']) if row.get('Quantity') else None,
                             'commission': float(row['Commission']) if row.get('Commission') else None,
                             'memo': row.get('Notes', '').strip()
                         }
-                        if trans['action'] and trans['date'] and trans['security']:
+                        if all(trans.get(k) and trans[k] for k in ['action', 'date', 'security']):
                             self.transactions.append(trans)
-                    except (ValueError, KeyError):
+                    except (ValueError, KeyError) as e:
+                        print(f"Error processing row: {e}")
                         continue
             self.update_transaction_list()
             QMessageBox.information(self, "Success", "CSV file imported successfully")
@@ -331,7 +286,9 @@ class QIFConverterGUI(QMainWindow):
             
         try:
             # Ensure directory exists
-            os.makedirs(os.path.dirname(filename) or '.', exist_ok=True)
+            dirname = os.path.dirname(filename)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
             
             with open(filename, 'w') as f:
                 f.write(f"{QIFType.INVESTMENT.value}\n")
