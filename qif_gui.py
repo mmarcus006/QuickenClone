@@ -181,7 +181,7 @@ class QIFConverterGUI(QMainWindow):
         layout.addLayout(convert_layout)
         
         # Initialize mapping fields
-        self.update_mapping_fields()
+        self.mapping = {}
     
     def add_transaction(self):
         dialog = TransactionDialog(self)

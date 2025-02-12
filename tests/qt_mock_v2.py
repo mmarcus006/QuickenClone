@@ -184,10 +184,15 @@ class MockQPushButton(MockQWidget):
 
 class MockQDialogButtonBox(MockQWidget):
     """Mock QDialogButtonBox"""
-    def __init__(self, parent=None):
+    class StandardButton:
+        Ok = 0x00000400
+        Cancel = 0x00000800
+        
+    def __init__(self, buttons=None, parent=None):
         super().__init__(parent)
         self.accepted = QtSignal()
         self.rejected = QtSignal()
+        self.buttons = buttons
         
     def addButton(self, button, role):
         pass
