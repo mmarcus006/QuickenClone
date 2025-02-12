@@ -119,18 +119,16 @@ class TransactionDialog(QDialog):
         # Add other fields if they're visible and not empty
         for field, widget in self.fields.items():
             if field not in ('date', 'security', 'action'):  # Already added
-                if widget.isVisible() and widget.text().strip():
+                if widget.isVisible():
+                    text = widget.text().strip()
                     if field in ('price', 'quantity', 'commission', 'amount'):
                         try:
-                            data[field] = float(widget.text().strip())
+                            if text:
+                                data[field] = float(text)
                         except ValueError:
                             pass
                     else:
-                        data[field] = widget.text().strip()
-        
-        # Ensure security field is always included
-        if not data.get('security'):
-            data['security'] = self.fields['security'].text().strip()
+                        data[field] = text
         
         # Validate required fields
         if not all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
@@ -199,7 +197,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and all(k in data and data[k] for k in ['date', 'action', 'security']):
+            if data:
                 self.transactions.append(data)
                 self.update_transaction_list()
     
@@ -312,11 +310,6 @@ class QIFConverterGUI(QMainWindow):
             if not filename.lower().endswith('.qif'):
                 filename += '.qif'
             
-            # Create parent directory if it doesn't exist
-            dirname = os.path.dirname(filename)
-            if dirname:
-                os.makedirs(dirname, exist_ok=True)
-            
             # Create the file
             with open(filename, 'w') as f:
                 f.write(f"{QIFType.INVESTMENT.value}\n")
@@ -344,6 +337,7 @@ class QIFConverterGUI(QMainWindow):
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error exporting to QIF: {str(e)}")
+            raise  # Re-raise to help with debugging
 
 def main():
     app = QApplication(sys.argv)
