@@ -132,6 +132,10 @@ class TransactionDialog(QDialog):
         if not data.get('security'):
             data['security'] = self.fields['security'].text().strip()
         
+        # Ensure all required fields are present and non-empty
+        if not all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
+            return None
+        
         return data
 
 class QIFConverterGUI(QMainWindow):
@@ -195,7 +199,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and all(data.get(k) and data[k].strip() for k in ['date', 'action', 'security']):
+            if data:
                 self.transactions.append(data)
                 self.update_transaction_list()
     
@@ -219,7 +223,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self, data)
         if dialog.exec():
             new_data = dialog.get_data()
-            if new_data and new_data.get('date') and new_data.get('action'):
+            if new_data:
                 self.transactions.append(new_data)
                 self.update_transaction_list()
     
