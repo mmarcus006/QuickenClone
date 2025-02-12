@@ -199,7 +199,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data:
+            if data and all(data.get(k) for k in ['date', 'action', 'security']):
                 self.transactions.append(data)
                 self.update_transaction_list()
     
@@ -257,22 +257,36 @@ class QIFConverterGUI(QMainWindow):
         try:
             with open(filename, 'r') as f:
                 reader = csv.DictReader(f)
+                field_map = {
+                    'Transaction Type': 'action',
+                    'Trade Date': 'date',
+                    'Symbol': 'security',
+                    'Price': 'price',
+                    'Quantity': 'quantity',
+                    'Commission': 'commission',
+                    'Notes': 'memo'
+                }
+                
                 for row in reader:
                     try:
-                        trans = {
-                            'action': row['Transaction Type'].strip(),
-                            'date': row['Trade Date'].strip(),
-                            'security': row['Symbol'].strip(),
-                            'price': float(row['Price']) if row.get('Price') else None,
-                            'quantity': float(row['Quantity']) if row.get('Quantity') else None,
-                            'commission': float(row['Commission']) if row.get('Commission') else None,
-                            'memo': row.get('Notes', '').strip()
-                        }
-                        if trans['action'] and trans['date'] and trans['security']:
+                        trans = {}
+                        for csv_field, data_field in field_map.items():
+                            if csv_field in row:
+                                value = row[csv_field].strip()
+                                if data_field in ['price', 'quantity', 'commission']:
+                                    try:
+                                        trans[data_field] = float(value) if value else None
+                                    except ValueError:
+                                        continue
+                                else:
+                                    trans[data_field] = value
+                        
+                        if all(trans.get(k) for k in ['action', 'date', 'security']):
                             self.transactions.append(trans)
                     except (ValueError, KeyError) as e:
                         print(f"Error processing row: {e}")
                         continue
+                        
             self.update_transaction_list()
             QMessageBox.information(self, "Success", "CSV file imported successfully")
         except Exception as e:

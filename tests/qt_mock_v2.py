@@ -58,6 +58,7 @@ class MockQDialog(MockQWidget):
         
     def exec(self):
         self.accepted.emit()
+        self.result = True
         return True
     
     def accept(self):
