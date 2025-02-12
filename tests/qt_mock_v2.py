@@ -55,9 +55,8 @@ class MockQDialog(MockQWidget):
         self.rejected = QtSignal()
         
     def exec(self):
-        self.result = True
         self.accepted.emit()
-        return self.result
+        return True
     
     def accept(self):
         self.result = True
@@ -145,11 +144,11 @@ class MockQFileDialog:
     """Mock QFileDialog"""
     @staticmethod
     def getOpenFileName(parent=None, caption="", directory="", filter=""):
-        return directory or "test.csv", filter
+        return directory, filter
     
     @staticmethod
     def getSaveFileName(parent=None, caption="", directory="", filter=""):
-        return directory or "test.qif", filter
+        return directory, filter
 
 class MockQMessageBox:
     """Mock QMessageBox"""
