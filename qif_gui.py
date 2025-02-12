@@ -112,25 +112,25 @@ class TransactionDialog(QDialog):
         """Get the transaction data"""
         data = {
             'action': self.type_combo.currentText(),
-            'date': self.fields['date'].text(),
-            'security': self.fields['security'].text()
+            'date': self.fields['date'].text().strip(),
+            'security': self.fields['security'].text().strip()
         }
         
         # Add other fields if they're visible and not empty
         for field, widget in self.fields.items():
             if field not in ('date', 'security', 'action'):  # Already added
-                if widget.isVisible() and widget.text():
+                if widget.isVisible() and widget.text().strip():
                     if field in ('price', 'quantity', 'commission', 'amount'):
                         try:
-                            data[field] = float(widget.text())
+                            data[field] = float(widget.text().strip())
                         except ValueError:
                             pass
                     else:
-                        data[field] = widget.text()
+                        data[field] = widget.text().strip()
         
         # Ensure security field is always included
-        if 'security' not in data or not data['security']:
-            data['security'] = self.fields['security'].text() or ''
+        if not data.get('security'):
+            data['security'] = self.fields['security'].text().strip()
         
         return data
 
@@ -285,14 +285,10 @@ class QIFConverterGUI(QMainWindow):
             return
             
         try:
-            # Ensure directory exists
-            dirname = os.path.dirname(filename)
-            if dirname:
-                os.makedirs(dirname, exist_ok=True)
-            
             with open(filename, 'w') as f:
                 f.write(f"{QIFType.INVESTMENT.value}\n")
                 for trans in self.transactions:
+                    f.write("^\n")  # Start transaction
                     f.write(f"D{trans['date']}\n")
                     f.write(f"N{trans['action']}\n")
                     if trans.get('security'):
@@ -309,7 +305,6 @@ class QIFConverterGUI(QMainWindow):
                         f.write(f"L[{trans['account']}]\n")
                     if trans.get('memo'):
                         f.write(f"M{trans['memo']}\n")
-                    f.write("^\n")
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error exporting to QIF: {str(e)}")
