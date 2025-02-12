@@ -88,12 +88,15 @@ def test_duplicate_transaction(gui):
 
 def test_export_qif(gui, tmp_path):
     """Test exporting to QIF"""
+    os.makedirs(tmp_path, exist_ok=True)
     gui.transactions = [{
         'action': InvestmentAction.BUY.value,
         'date': '01/15/2024',
         'security': 'AAPL',
         'price': 185.92,
-        'quantity': 10
+        'quantity': 10,
+        'commission': 4.95,
+        'memo': 'Test buy'
     }]
     
     qif_file = str(tmp_path / "test.qif")
@@ -106,13 +109,18 @@ def test_export_qif(gui, tmp_path):
         assert "!Type:Invst" in content
         assert "NBuy" in content
         assert "YAAPL" in content
+        assert "I185.9200" in content
+        assert "Q10.0000" in content
+        assert "O4.95" in content
 
 def test_import_csv(gui, tmp_path):
     """Test importing from CSV"""
+    os.makedirs(tmp_path, exist_ok=True)
     csv_file = str(tmp_path / "test.csv")
     with open(csv_file, "w") as f:
         f.write("""Transaction Type,Trade Date,Symbol,Price,Quantity,Commission,Notes
-Buy,01/15/2024,AAPL,185.92,10,4.95,Test buy""")
+Buy,01/15/2024,AAPL,185.92,10,4.95,Test buy
+""")
     
     with patch('qif_gui.QFileDialog.getOpenFileName', return_value=(csv_file, "CSV files (*.csv)")):
         gui.import_csv()
