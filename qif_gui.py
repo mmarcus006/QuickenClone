@@ -272,11 +272,6 @@ class QIFConverterGUI(QMainWindow):
             return False
             
         try:
-            # Create directory if it doesn't exist
-            dirname = os.path.dirname(filename)
-            if dirname:
-                os.makedirs(dirname, exist_ok=True)
-            
             # Read CSV file
             with open(filename, 'r') as f:
                 # Parse CSV
@@ -372,11 +367,6 @@ class QIFConverterGUI(QMainWindow):
             return False
             
         try:
-            # Create directory if it doesn't exist
-            dirname = os.path.dirname(filename)
-            if dirname:
-                os.makedirs(dirname, exist_ok=True)
-                
             # Write transactions
             with open(filename, 'w') as f:
                 # Write header
