@@ -142,6 +142,11 @@ class MockQDialog(MockQWidget):
                     self.fields[field].setText(str(value))
             # Set result based on data validity
             data = self.get_data()
+            if data is not None:  # Valid data
+                self.result = True
+                self.exec_result = True
+            # Set result based on data validity
+            data = self.get_data()
             if data is None:  # Invalid data
                 self.result = False
                 self.exec_result = False
@@ -179,11 +184,13 @@ class MockQDialog(MockQWidget):
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid, set result and return True
-        self.result = True
-        self.exec_result = True
-        self.accepted.emit()
-        return True
+        # Data is valid, return current result
+        if self.result:  # Dialog was accepted
+            self.accepted.emit()
+            return True
+        # Dialog was cancelled
+        self.rejected.emit()
+        return False
 
     def get_result(self):
         return self.result  # Return dialog result value
