@@ -140,16 +140,6 @@ class MockQDialog(MockQWidget):
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields and value is not None:
                     self.fields[field].setText(str(value))
-            # Set result based on data validity
-            data = self.get_data()
-            if data is not None:  # Valid data
-                self.result = True
-                self.exec_result = True
-                self.accepted.emit()  # Emit accepted signal for valid data
-            else:  # Invalid data
-                self.result = False
-                self.exec_result = False
-                self.rejected.emit()  # Emit rejected signal for invalid data
             
     def update_fields(self, action):
         """Update field visibility based on action"""
