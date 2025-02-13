@@ -193,16 +193,17 @@ class MockQDialog(MockQWidget):
         return self.result  # Return dialog result value
     
     def accept(self):
+        """Accept dialog only if data is valid"""
         data = self.get_data()
-        if data is not None:
-            self.result = True
-            self.exec_result = True
-            self.accepted.emit()
-            return True
-        self.result = False
-        self.exec_result = False
-        self.rejected.emit()
-        return False
+        if data is None:  # Invalid data
+            self.result = False
+            self.exec_result = False
+            self.rejected.emit()
+            return False
+        self.result = True
+        self.exec_result = True
+        self.accepted.emit()
+        return True
         
     def reject(self):
         self.result = False
