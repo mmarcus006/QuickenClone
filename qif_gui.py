@@ -216,18 +216,25 @@ class QIFConverterGUI(QMainWindow):
                 idx = item
             else:
                 idx = self.transaction_list.row(item)
-            if 0 <= idx < len(self.transactions):
-                dialog = TransactionDialog(self, self.transactions[idx])
-                if dialog.exec():  # Dialog accepted
-                    data = dialog.get_data()
-                    if data:  # Valid data
-                        self.transactions[idx] = data
-                        self.update_transaction_list()
-                        return True
-                return False  # Dialog cancelled or invalid data
-            return False  # Invalid index
-        except (AttributeError, TypeError, ValueError):
-            return False  # Error handling item
+            if idx < 0 or idx >= len(self.transactions):
+                QMessageBox.warning(self, "Error", "Invalid transaction index")
+                return False
+            dialog = TransactionDialog(self, self.transactions[idx])
+            if not dialog.exec():  # Dialog cancelled
+                return False
+            data = dialog.get_data()
+            if not data:  # Invalid data
+                QMessageBox.warning(self, "Error", "Invalid transaction data")
+                return False
+            if not all(data.get(field) and str(data[field]).strip() for field in ['action', 'date', 'security']):
+                QMessageBox.warning(self, "Error", "Missing required fields")
+                return False
+            self.transactions[idx] = data
+            self.update_transaction_list()
+            return True
+        except (AttributeError, TypeError, ValueError) as e:
+            QMessageBox.critical(self, "Error", f"Failed to edit transaction: {str(e)}")
+            return False
     
     def duplicate_transaction(self):
         """Duplicate selected transaction"""
