@@ -175,8 +175,6 @@ class MockQDialog(MockQWidget):
         # Always validate data first
         data = self.get_data()
         if data is None:  # Invalid data
-            self.result = False
-            self.exec_result = False
             self.rejected.emit()
             return False
         # Data is valid, set result and return True
@@ -219,6 +217,8 @@ class MockQDialog(MockQWidget):
             
             # Ensure all required fields have non-empty values
             if not all(data.get(field) for field in ['action', 'date', 'security']):
+                self.result = False
+                self.exec_result = False
                 return None
             
             # Add optional fields if visible and not empty
@@ -238,11 +238,15 @@ class MockQDialog(MockQWidget):
                         try:
                             data[field] = convert(value)
                         except ValueError:
-                            continue
+                            self.result = False
+                            self.exec_result = False
+                            return None
                 
             # Make a deep copy to avoid reference issues
             return dict(data)
         except (ValueError, KeyError):
+            self.result = False
+            self.exec_result = False
             return None
 
 class MockQFileDialog:
