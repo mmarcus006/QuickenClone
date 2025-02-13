@@ -117,7 +117,7 @@ class MockQComboBox(MockQWidget):
         self._current_text = "Buy"  # Default to Buy
         self.currentTextChanged = QtSignal()
         self._parent = parent
-        self._visible_fields = {'date', 'security', 'memo', 'price', 'quantity', 'commission', 'amount', 'account'}
+        self._visible_fields = {'date', 'security', 'memo'}
         self.result = True
         self.accepted = QtSignal()
         self.rejected = QtSignal()
@@ -126,15 +126,117 @@ class MockQComboBox(MockQWidget):
         for field in ['date', 'security', 'price', 'quantity', 'commission', 'amount', 'account', 'memo']:
             self.fields[field] = MockQLineEdit(self)
         self.type_combo = self
+        
+        if transaction_data:
+            for field, value in transaction_data.items():
+                if field == 'action':
+                    self._current_text = value
+                elif field in self.fields:
+                    self.fields[field].setText(str(value))
+                    
         if isinstance(parent, MockQDialog):
             parent.type_combo = self
             parent.fields = self.fields
-            if transaction_data:
-                for field, value in transaction_data.items():
-                    if field == 'action':
-                        self._current_text = value
-                    elif field in self.fields:
-                        self.fields[field].setText(str(value))
+            parent.get_data = self.get_data
+            
+        self.update_fields(self._current_text)
+        
+        if transaction_data:
+            for field, value in transaction_data.items():
+                if field == 'action':
+                    self._current_text = value
+                elif field in self.fields:
+                    self.fields[field].setText(str(value))
+                    
+        if isinstance(parent, MockQDialog):
+            parent.type_combo = self
+            parent.fields = self.fields
+            parent.get_data = self.get_data
+        
+        if transaction_data:
+            for field, value in transaction_data.items():
+                if field == 'action':
+                    self._current_text = value
+                elif field in self.fields:
+                    self.fields[field].setText(str(value))
+                    
+        if isinstance(parent, MockQDialog):
+            parent.type_combo = self
+            parent.fields = self.fields
+            parent.get_data = self.get_data
+        
+        def get_data():
+            data = {
+                'action': self._current_text,
+                'date': self.fields['date'].text().strip(),
+                'security': self.fields['security'].text().strip(),
+                'price': float(self.fields['price'].text()) if self.fields['price'].text().strip() else 0.0,
+                'quantity': float(self.fields['quantity'].text()) if self.fields['quantity'].text().strip() else 0.0,
+                'commission': float(self.fields['commission'].text()) if self.fields['commission'].text().strip() else 0.0
+            }
+            memo = self.fields['memo'].text().strip()
+            if memo:
+                data['memo'] = memo
+            return data
+            
+        self.get_data = get_data
+        if isinstance(parent, MockQDialog):
+            parent.type_combo = self
+            parent.fields = self.fields
+            parent.get_data = get_data
+        
+        def get_data():
+            data = {
+                'action': self._current_text,
+                'date': self.fields['date'].text().strip(),
+                'security': self.fields['security'].text().strip(),
+                'price': float(self.fields['price'].text()) if self.fields['price'].text().strip() else 0.0,
+                'quantity': float(self.fields['quantity'].text()) if self.fields['quantity'].text().strip() else 0.0,
+                'commission': float(self.fields['commission'].text()) if self.fields['commission'].text().strip() else 0.0
+            }
+            memo = self.fields['memo'].text().strip()
+            if memo:
+                data['memo'] = memo
+            return data
+            
+        self.get_data = get_data
+        if isinstance(parent, MockQDialog):
+            parent.type_combo = self
+            parent.fields = self.fields
+            parent.get_data = get_data
+            
+        if transaction_data:
+            for field, value in transaction_data.items():
+                if field == 'action':
+                    self._current_text = value
+                elif field in self.fields:
+                    self.fields[field].setText(str(value))
+        
+        def get_data():
+            data = {
+                'action': self._current_text,
+                'date': self.fields['date'].text().strip(),
+                'security': self.fields['security'].text().strip(),
+                'price': float(self.fields['price'].text()) if self.fields['price'].text().strip() else 0.0,
+                'quantity': float(self.fields['quantity'].text()) if self.fields['quantity'].text().strip() else 0.0,
+                'commission': float(self.fields['commission'].text()) if self.fields['commission'].text().strip() else 0.0
+            }
+            memo = self.fields['memo'].text().strip()
+            if memo:
+                data['memo'] = memo
+            return data
+            
+        self.get_data = get_data
+        if transaction_data:
+            for field, value in transaction_data.items():
+                if field == 'action':
+                    self._current_text = value
+                elif field in self.fields:
+                    self.fields[field].setText(str(value))
+        if isinstance(parent, MockQDialog):
+            parent.type_combo = self
+            parent.fields = self.fields
+            parent.get_data = self.get_data
             def get_data():
                 data = {
                     'action': self._current_text,
@@ -156,24 +258,28 @@ class MockQComboBox(MockQWidget):
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
-        self._visible_fields = {'date', 'security', 'amount', 'memo', 'price', 'quantity', 'commission'}
+        self._visible_fields = {'date', 'security', 'memo'}
         self._current_text = action_type
-        if action_type in ['Buy', 'Sell', 'BuyX', 'SellX']:
+        if action_type in ['Buy', 'Sell']:
             self._visible_fields.update({'price', 'quantity', 'commission'})
         elif action_type in ['BuyX', 'SellX']:
             self._visible_fields.update({'price', 'quantity', 'account'})
+        elif action_type in ['Div', 'IntInc']:
+            self._visible_fields.update({'amount'})
         elif action_type in ['Div', 'IntInc']:
             pass  # Only default fields
         self._visible_fields = {'date', 'security', 'amount', 'price', 'quantity', 'commission', 'memo', 'account'}
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
-        self._visible_fields = {'date', 'security', 'amount', 'memo', 'price', 'quantity', 'commission'}
+        self._visible_fields = {'date', 'security', 'memo'}
         self._current_text = action_type
-        if action_type in ['Buy', 'Sell', 'BuyX', 'SellX']:
+        if action_type in ['Buy', 'Sell']:
             self._visible_fields.update({'price', 'quantity', 'commission'})
         elif action_type in ['BuyX', 'SellX']:
             self._visible_fields.update({'price', 'quantity', 'account'})
+        elif action_type in ['Div', 'IntInc']:
+            self._visible_fields.update({'amount'})
         elif action_type in ['Div', 'IntInc']:
             pass  # Only default fields
         
@@ -236,6 +342,9 @@ class MockQFileDialog:
         dirname = os.path.dirname(directory)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
+        # Create empty file
+        with open(directory, 'w') as f:
+            pass
         return directory, filter
 
 class MockQMessageBox:
