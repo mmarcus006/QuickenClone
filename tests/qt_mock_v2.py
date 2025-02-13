@@ -70,7 +70,8 @@ class MockQDialog(MockQWidget):
         
     def exec(self):
         self.accepted.emit()
-        return True  # Always return True for testing
+        self.result = True
+        return self.result
     
     def accept(self):
         self.result = True
@@ -110,7 +111,7 @@ class MockQLineEdit(MockQWidget):
 
 class MockQComboBox(MockQWidget):
     """Mock QComboBox"""
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, transaction_data=None):
         super().__init__(parent)
         self.items = []
         self._current_text = "Buy"  # Default to Buy
@@ -128,15 +129,30 @@ class MockQComboBox(MockQWidget):
         if isinstance(parent, MockQDialog):
             parent.type_combo = self
             parent.fields = self.fields
-            parent.get_data = lambda: {
-                'action': self._current_text,
-                'date': self.fields['date'].text().strip(),
-                'security': self.fields['security'].text().strip(),
-                'price': float(self.fields['price'].text()) if self.fields['price'].text().strip() else 0.0,
-                'quantity': float(self.fields['quantity'].text()) if self.fields['quantity'].text().strip() else 0.0,
-                'commission': float(self.fields['commission'].text()) if self.fields['commission'].text().strip() else 0.0,
-                'memo': self.fields['memo'].text().strip() if self.fields['memo'].text().strip() else ''
-            }
+            if transaction_data:
+                for field, value in transaction_data.items():
+                    if field == 'action':
+                        self._current_text = value
+                    elif field in self.fields:
+                        self.fields[field].setText(str(value))
+            def get_data():
+                data = {
+                    'action': self._current_text,
+                    'date': self.fields['date'].text().strip(),
+                    'security': self.fields['security'].text().strip()
+                }
+                for field in ['price', 'quantity', 'commission', 'amount']:
+                    text = self.fields[field].text().strip()
+                    if text:
+                        try:
+                            data[field] = float(text)
+                        except ValueError:
+                            data[field] = 0.0
+                memo = self.fields['memo'].text().strip()
+                if memo:
+                    data['memo'] = memo
+                return data
+            parent.get_data = get_data
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
@@ -220,9 +236,6 @@ class MockQFileDialog:
         dirname = os.path.dirname(directory)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
-        # Create an empty file to ensure it exists
-        with open(directory, 'w') as f:
-            f.write("!Type:Invst\n")  # Write header to ensure file exists
         return directory, filter
 
 class MockQMessageBox:
