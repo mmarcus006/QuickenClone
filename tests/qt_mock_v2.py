@@ -71,7 +71,7 @@ class MockQLineEdit(MockQWidget):
     """Mock QLineEdit"""
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._text = None
+        self._text = ""
         self._visible = True
         self.textChanged = QtSignal()
         self.returnPressed = QtSignal()
