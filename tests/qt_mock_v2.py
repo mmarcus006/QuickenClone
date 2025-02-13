@@ -119,11 +119,12 @@ class MockQComboBox(MockQWidget):
         self._current_text = ""
         self.currentTextChanged = QtSignal()
         self._parent = parent
-        self._visible_fields = {'date', 'security', 'amount', 'memo', 'price', 'quantity', 'commission', 'account'}
+        self._visible_fields = {'date', 'security', 'memo'}  # Default visible fields
         self.result = True
         self.accepted = QtSignal()
         self.rejected = QtSignal()
         self.exec_result = True
+        self.fields = {}
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
@@ -157,7 +158,8 @@ class MockQComboBox(MockQWidget):
     def setCurrentText(self, text):
         self._current_text = str(text)
         self.currentTextChanged.emit(self._current_text)
-        self.update_fields(text)
+        if hasattr(self._parent, 'update_fields'):
+            self._parent.update_fields(text)
 
 class MockQListWidget(MockQWidget):
     """Mock QListWidget"""
@@ -206,7 +208,7 @@ class MockQFileDialog:
             os.makedirs(dirname, exist_ok=True)
         # Create an empty file to ensure it exists
         with open(directory, 'w') as f:
-            f.write("!Type:Invst\n")
+            f.write("!Type:Invst\n")  # Write header to ensure file exists
         return directory, filter
 
 class MockQMessageBox:
