@@ -105,7 +105,7 @@ class MockQLineEdit(MockQWidget):
         self._visible = bool(visible)
         
     def isVisible(self):
-        return True
+        return self._visible
         
     def clear(self):
         self._text = ""

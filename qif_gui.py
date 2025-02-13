@@ -118,19 +118,20 @@ class TransactionDialog(QDialog):
         data['date'] = self.fields['date'].text().strip()
         data['security'] = self.fields['security'].text().strip()
         
-        # Add other fields if they're not empty
+        # Add other fields if they're visible and not empty
         for field, widget in self.fields.items():
             if field not in ('date', 'security', 'action'):  # Already added
-                text = widget.text().strip()
-                if field in ('price', 'quantity', 'commission', 'amount'):
-                    try:
+                if widget.isVisible():
+                    text = widget.text().strip()
+                    if field in ('price', 'quantity', 'commission', 'amount'):
+                        try:
+                            if text:
+                                data[field] = float(text)
+                        except ValueError:
+                            pass
+                    else:
                         if text:
-                            data[field] = float(text)
-                    except ValueError:
-                        pass
-                else:
-                    if text:
-                        data[field] = text
+                            data[field] = text
         
         # Validate required fields
         if not all(k in data and data[k] and str(data[k]).strip() for k in ['date', 'action', 'security']):
@@ -320,7 +321,7 @@ class QIFConverterGUI(QMainWindow):
             
             # Create the file
             with open(filename, 'w') as f:
-                f.write(f"{QIFType.INVESTMENT.value}\n")
+                f.write(f"!Type:Invst\n")  # Use !Type:Invst instead of QIFType.INVESTMENT.value
                 for trans in self.transactions:
                     f.write("^\n")  # Start transaction
                     f.write(f"D{trans['date']}\n")
@@ -340,8 +341,6 @@ class QIFConverterGUI(QMainWindow):
                     if trans.get('memo'):
                         f.write(f"M{trans['memo']}\n")
                 f.write("^\n")  # End last transaction
-                f.flush()
-                os.fsync(f.fileno())
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
             return True
         except Exception as e:
