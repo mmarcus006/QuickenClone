@@ -120,13 +120,13 @@ class MockQListWidget(MockQWidget):
 class MockQDialog(MockQWidget):
     def __init__(self, parent=None, transaction_data=None):
         super().__init__(parent)
-        self.result = False  # Start with False until validated
+        self.result = True  # Start with True for valid data
         self.accepted = QtSignal()
         self.rejected = QtSignal()
         self.type_combo = MockQComboBox(self)
         self.fields = {}
         self.exec_called = False
-        self.exec_result = False  # Track exec() result separately from dialog result
+        self.exec_result = True  # Track exec() result separately from dialog result
         
         # Initialize fields with default visibility
         for field in ['date', 'security', 'price', 'quantity', 'commission', 'amount', 'account', 'memo']:
@@ -140,7 +140,8 @@ class MockQDialog(MockQWidget):
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields and value is not None:
                     self.fields[field].setText(str(value))
-            # Let validation determine result
+            # Validate data after setting
+            self.result = self.get_data() is not None
         else:
             # Set test data
             self.type_combo.setCurrentText('Buy')
@@ -173,19 +174,19 @@ class MockQDialog(MockQWidget):
     def exec(self):
         """Execute the dialog and return True to simulate user clicking OK"""
         self.exec_called = True
-        # Always validate data first
+        # Validate data
         data = self.get_data()
         if data is None:  # Invalid data
             self.result = False
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Only accept if data is valid and dialog wasn't cancelled
+        # Data is valid, check if dialog was accepted
         if not self.result:  # Dialog cancelled
             self.exec_result = False
             self.rejected.emit()
             return False
-        self.result = True
+        # Dialog accepted with valid data
         self.exec_result = True
         self.accepted.emit()
         return True
