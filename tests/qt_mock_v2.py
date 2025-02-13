@@ -170,14 +170,11 @@ class MockQDialog(MockQWidget):
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid, but dialog might still be cancelled
+        # Data is valid, set result and return True
+        self.result = True
         self.exec_result = True
-        if self.result:  # Dialog was accepted
-            self.accepted.emit()
-            return True
-        # Dialog was cancelled
-        self.rejected.emit()
-        return False
+        self.accepted.emit()
+        return True
 
     def get_result(self):
         return self.result  # Return dialog result value
@@ -190,10 +187,14 @@ class MockQDialog(MockQWidget):
             self.exec_result = False
             self.rejected.emit()
             return False
-        self.result = True
+        # Data is valid, but dialog might still be cancelled
         self.exec_result = True
-        self.accepted.emit()
-        return True
+        if self.result:  # Dialog was accepted
+            self.accepted.emit()
+            return True
+        # Dialog was cancelled
+        self.rejected.emit()
+        return False
         
     def reject(self):
         self.result = False
