@@ -310,7 +310,7 @@ def test_export_qif(gui, tmp_path):
     invalid_dialog.fields['date'].setText('')  # Empty required field
     invalid_dialog.fields['security'].setText('AAPL')
     invalid_dialog.type_combo.setCurrentText(InvestmentAction.BUY.value)
-    # Don't set result or exec_result - let exec() handle validation
+    # Dialog starts with result=False and validates in exec()
     with patch('qif_gui.TransactionDialog', return_value=invalid_dialog), \
          patch('qif_gui.QMessageBox', MockQMessageBox):
         assert gui.edit_transaction(0) is False  # Should fail due to invalid data

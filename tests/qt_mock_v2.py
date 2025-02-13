@@ -120,13 +120,13 @@ class MockQListWidget(MockQWidget):
 class MockQDialog(MockQWidget):
     def __init__(self, parent=None, transaction_data=None):
         super().__init__(parent)
-        self.result = True  # Start with True for valid data
+        self.result = False  # Start with False until validated
         self.accepted = QtSignal()
         self.rejected = QtSignal()
         self.type_combo = MockQComboBox(self)
         self.fields = {}
         self.exec_called = False
-        self.exec_result = True  # Track exec() result separately from dialog result
+        self.exec_result = False  # Track exec() result separately from dialog result
         
         # Initialize fields with default visibility
         for field in ['date', 'security', 'price', 'quantity', 'commission', 'amount', 'account', 'memo']:
@@ -140,7 +140,7 @@ class MockQDialog(MockQWidget):
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields and value is not None:
                     self.fields[field].setText(str(value))
-            self.result = True  # Set to True for valid data
+            # Let validation determine result
         else:
             # Set test data
             self.type_combo.setCurrentText('Buy')
