@@ -70,7 +70,7 @@ class MockQDialog(MockQWidget):
         
     def exec(self):
         self.accepted.emit()
-        return True
+        return True  # Always return True for testing
     
     def accept(self):
         self.result = True
@@ -126,6 +126,8 @@ class MockQComboBox(MockQWidget):
         if isinstance(parent, MockQDialog):
             parent.type_combo = self
             parent.fields = self.fields
+            for field in ['date', 'security', 'price', 'quantity', 'commission', 'amount', 'account', 'memo']:
+                self.fields[field] = MockQLineEdit(self)
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
@@ -209,7 +211,7 @@ class MockQFileDialog:
             os.makedirs(dirname, exist_ok=True)
         # Create an empty file to ensure it exists
         with open(directory, 'w') as f:
-            pass  # Just create empty file, let the caller write the content
+            f.write("!Type:Invst\n")  # Write header to ensure file exists
         return directory, filter
 
 class MockQMessageBox:
