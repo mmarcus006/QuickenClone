@@ -122,20 +122,18 @@ class TransactionDialog(QDialog):
         data['date'] = self.fields['date'].text().strip()
         data['security'] = self.fields['security'].text().strip()
         
-        # Add other fields if they're visible and not empty
+        # Add other fields if they're not empty
         for field, widget in self.fields.items():
             if field not in ('date', 'security', 'action'):  # Already added
-                if widget.isVisible():
-                    text = widget.text().strip()
+                text = widget.text().strip()
+                if text:  # Only add non-empty fields
                     if field in ('price', 'quantity', 'commission', 'amount'):
                         try:
-                            if text:
-                                data[field] = float(text)
+                            data[field] = float(text)
                         except ValueError:
                             pass
                     else:
-                        if text:
-                            data[field] = text
+                        data[field] = text
         
         # Validate required fields
         if not all(k in data and data[k] and str(data[k]).strip() for k in ['date', 'action', 'security']):
@@ -204,7 +202,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and all(k in data and str(data[k]).strip() for k in ['date', 'action', 'security']):
+            if data:  # get_data() already validates required fields
                 self.transactions.append(data.copy())
                 self.update_transaction_list()
                 return True
@@ -230,7 +228,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self, data)
         if dialog.exec():
             new_data = dialog.get_data()
-            if new_data and all(k in new_data and str(new_data[k]).strip() for k in ['date', 'action', 'security']):
+            if new_data:  # get_data() already validates required fields
                 self.transactions.append(new_data.copy())
                 self.update_transaction_list()
                 return True
