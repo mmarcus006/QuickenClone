@@ -220,18 +220,19 @@ class QIFConverterGUI(QMainWindow):
                 QMessageBox.warning(self, "Error", "Invalid transaction index")
                 return False
             dialog = TransactionDialog(self, self.transactions[idx])
-            # Get data first to validate
-            data = dialog.get_data()
-            if not data:  # Invalid data
+            # Run dialog and validate
+            if not dialog.exec():  # Dialog cancelled or validation failed
                 QMessageBox.warning(self, "Error", "Invalid transaction data")
                 return False
-            # Run dialog after validation
-            if not dialog.exec():  # Dialog cancelled
+            # Get data after successful dialog
+            data = dialog.get_data()
+            if not data:  # Double check data validity
+                QMessageBox.warning(self, "Error", "Invalid transaction data")
                 return False
             # Update transaction
             self.transactions[idx] = data
             self.update_transaction_list()
-            return dialog.result
+            return True
         except (AttributeError, TypeError, ValueError) as e:
             QMessageBox.critical(self, "Error", f"Failed to edit transaction: {str(e)}")
             return False
