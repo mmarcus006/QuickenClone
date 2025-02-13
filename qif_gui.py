@@ -198,7 +198,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and all(k in data and data[k] for k in ['date', 'action', 'security']):
+            if data:
                 self.transactions.append(data)
                 self.update_transaction_list()
     
@@ -338,7 +338,7 @@ class QIFConverterGUI(QMainWindow):
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error exporting to QIF: {str(e)}")
-            raise  # Re-raise to help with debugging
+            return
 
 def main():
     app = QApplication(sys.argv)
