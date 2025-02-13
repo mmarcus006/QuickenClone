@@ -218,12 +218,12 @@ class MockQDialog(MockQWidget):
             # Get values from fields
             data = {
                 'action': str(self.type_combo.currentText()),
-                'date': str(self.fields['date'].text()),
-                'security': str(self.fields['security'].text())
+                'date': str(self.fields['date'].text()).strip(),
+                'security': str(self.fields['security'].text()).strip()
             }
             
-            # Ensure required fields have values
-            if not all(data.get(field) and str(data[field]).strip() for field in ['action', 'date', 'security']):
+            # Ensure all required fields have non-empty values
+            if not all(data.get(field) for field in ['action', 'date', 'security']):
                 return None
             
             # Add optional fields if visible and not empty
@@ -237,13 +237,13 @@ class MockQDialog(MockQWidget):
             }
             
             for field, convert in optional_fields.items():
-                if self.fields[field].isVisible() and self.fields[field].text():
-                    try:
-                        value = str(self.fields[field].text()).strip()
-                        if value:  # Only convert non-empty values
+                if self.fields[field].isVisible():
+                    value = str(self.fields[field].text()).strip()
+                    if value:  # Only convert non-empty values
+                        try:
                             data[field] = convert(value)
-                    except ValueError:
-                        continue
+                        except ValueError:
+                            continue
                 
             # Make a deep copy to avoid reference issues
             return dict(data)
