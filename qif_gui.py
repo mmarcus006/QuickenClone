@@ -293,7 +293,6 @@ class QIFConverterGUI(QMainWindow):
                 
                 # Process rows
                 valid_rows = []
-                success = False
                 for row in reader:
                     try:
                         # Required fields must be present and non-empty
@@ -319,7 +318,6 @@ class QIFConverterGUI(QMainWindow):
                             trans['memo'] = row['Notes'].strip()
                             
                         valid_rows.append(trans)
-                        success = True
                     except (ValueError, KeyError) as e:
                         QMessageBox.warning(self, "Warning", 
                             f"Skipping invalid row: {str(e)}")
@@ -329,7 +327,7 @@ class QIFConverterGUI(QMainWindow):
                 if valid_rows:
                     self.transactions.extend(valid_rows)
                     self.update_transaction_list()
-                    return success
+                    return True
                 
                 QMessageBox.warning(self, "Error", "No valid transactions found in CSV")
                 return False

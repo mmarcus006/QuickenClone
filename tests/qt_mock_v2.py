@@ -253,6 +253,7 @@ class MockQFileDialog:
         if MockQFileDialog._return_empty:
             return ("", "")
         MockQFileDialog._last_filename = "test.csv"
+        MockQFileDialog._return_empty = False
         return (MockQFileDialog._last_filename, "CSV Files (*.csv)")
         
     @staticmethod
