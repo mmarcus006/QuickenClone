@@ -309,8 +309,7 @@ def test_export_qif(gui, tmp_path):
     invalid_dialog = MockQDialog()
     invalid_dialog.fields['date'].setText('')  # Empty required field
     invalid_dialog.result = True  # Dialog accepted
-    invalid_dialog.exec = MagicMock(return_value=True)  # Dialog accepted
-    invalid_dialog.get_data = MagicMock(return_value=None)  # But data is invalid
+    invalid_dialog.get_data = MagicMock(return_value=None)  # Invalid data
     with patch('qif_gui.TransactionDialog', return_value=invalid_dialog), \
          patch('qif_gui.QMessageBox', MockQMessageBox):
         assert gui.edit_transaction(0) is False  # Should fail due to invalid data
