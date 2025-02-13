@@ -215,13 +215,16 @@ class QIFConverterGUI(QMainWindow):
             idx = self.transaction_list.row(item)
             if 0 <= idx < len(self.transactions):
                 dialog = TransactionDialog(self, self.transactions[idx])
-                if dialog.exec() and dialog.get_data():
-                    self.transactions[idx] = dialog.get_data()
-                    self.update_transaction_list()
-                    return True
-            return False
+                if dialog.exec():  # Dialog accepted
+                    data = dialog.get_data()
+                    if data:  # Valid data
+                        self.transactions[idx] = data
+                        self.update_transaction_list()
+                        return True
+                return False  # Dialog cancelled or invalid data
+            return False  # Invalid index
         except (AttributeError, TypeError, ValueError):
-            return False
+            return False  # Error handling item
     
     def duplicate_transaction(self):
         """Duplicate selected transaction"""
