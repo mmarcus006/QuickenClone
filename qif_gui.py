@@ -229,6 +229,14 @@ class QIFConverterGUI(QMainWindow):
             if not all(data.get(field) and str(data[field]).strip() for field in ['action', 'date', 'security']):
                 QMessageBox.warning(self, "Error", "Missing required fields")
                 return False
+            # Validate numeric fields
+            for field in ['price', 'quantity', 'commission', 'amount']:
+                if field in data:
+                    try:
+                        data[field] = float(data[field])
+                    except (TypeError, ValueError):
+                        QMessageBox.warning(self, "Error", f"Invalid {field} value")
+                        return False
             self.transactions[idx] = data
             self.update_transaction_list()
             return True
