@@ -63,10 +63,10 @@ class MockQDialog(MockQWidget):
             self.fields[field]._text = ""
             self.fields[field]._visible = True
         if transaction_data:
-            self.type_combo.setCurrentText(transaction_data['action'])
+            self.type_combo._current_text = transaction_data['action']
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields:
-                    self.fields[field].setText(str(value))
+                    self.fields[field]._text = str(value)
         
     def exec(self):
         if self.result:
@@ -114,8 +114,6 @@ class MockQComboBox(MockQWidget):
         self.items = []
         self._current_text = ""
         self.currentTextChanged = QtSignal()
-        self.type_combo = MockQComboBox()
-        self.fields = {}
         
     def addItems(self, items):
         self.items.extend(items)
