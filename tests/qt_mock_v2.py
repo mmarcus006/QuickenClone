@@ -51,7 +51,7 @@ class MockQMainWindow(MockQWidget):
 
 class MockQDialog(MockQWidget):
     """Mock QDialog"""
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, transaction_data=None):
         super().__init__(parent)
         self.result = True
         self.accepted = QtSignal()
@@ -61,6 +61,12 @@ class MockQDialog(MockQWidget):
         for field in ['date', 'security', 'price', 'quantity', 'commission', 'memo', 'amount', 'account']:
             self.fields[field] = MockQLineEdit()
             self.fields[field]._text = ""
+            self.fields[field]._visible = True
+        if transaction_data:
+            self.type_combo._current_text = transaction_data['action']
+            for field, value in transaction_data.items():
+                if field != 'action' and field in self.fields:
+                    self.fields[field]._text = str(value)
         
     def exec(self):
         if self.result:
@@ -108,16 +114,8 @@ class MockQComboBox(MockQWidget):
         self.items = []
         self._current_text = ""
         self.currentTextChanged = QtSignal()
-        self.fields = {
-            'date': MockQLineEdit(),
-            'security': MockQLineEdit(),
-            'price': MockQLineEdit(),
-            'quantity': MockQLineEdit(),
-            'commission': MockQLineEdit(),
-            'memo': MockQLineEdit(),
-            'amount': MockQLineEdit(),
-            'account': MockQLineEdit()
-        }
+        self.type_combo = MockQComboBox()
+        self.fields = {}
         
     def addItems(self, items):
         self.items.extend(items)

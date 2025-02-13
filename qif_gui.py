@@ -132,6 +132,10 @@ class TransactionDialog(QDialog):
                         if text:
                             data[field] = text
         
+        # Validate required fields
+        if not all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
+            return None
+            
         return data
 
 class QIFConverterGUI(QMainWindow):
