@@ -122,12 +122,12 @@ class MockQComboBox(MockQWidget):
         self.rejected = QtSignal()
         self.exec_result = True
         self.fields = {}
+        for field in ['date', 'security', 'price', 'quantity', 'commission', 'amount', 'account', 'memo']:
+            self.fields[field] = MockQLineEdit(self)
         self.type_combo = self
         if isinstance(parent, MockQDialog):
             parent.type_combo = self
             parent.fields = self.fields
-            for field in ['date', 'security', 'price', 'quantity', 'commission', 'amount', 'account', 'memo']:
-                self.fields[field] = MockQLineEdit(self)
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""

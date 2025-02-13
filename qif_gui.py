@@ -131,7 +131,7 @@ class TransactionDialog(QDialog):
                         try:
                             data[field] = float(text)
                         except ValueError:
-                            pass
+                            continue
                     else:
                         data[field] = text
         
