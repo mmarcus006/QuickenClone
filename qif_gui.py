@@ -277,26 +277,25 @@ class QIFConverterGUI(QMainWindow):
                 }
                 
                 for row in reader:
-                    try:
-                        trans = {}
-                        for csv_field, data_field in field_map.items():
-                            if csv_field in row:
-                                value = row[csv_field].strip()
+                    trans = {}
+                    for csv_field, data_field in field_map.items():
+                        if csv_field in row:
+                            value = row[csv_field].strip()
+                            if value:  # Only process non-empty values
                                 if data_field in ['price', 'quantity', 'commission']:
                                     try:
-                                        trans[data_field] = float(value) if value else None
+                                        trans[data_field] = float(value)
                                     except ValueError:
-                                        continue
+                                        trans[data_field] = 0.0
                                 else:
                                     trans[data_field] = value
-                        
-                        if all(k in trans and str(trans[k]).strip() for k in ['action', 'date', 'security']):
-                            self.transactions.append(trans.copy())
-                    except (ValueError, KeyError) as e:
-                        print(f"Error processing row: {e}")
-                        continue
-                        
-            self.update_transaction_list()
+                    
+                    # Validate required fields
+                    if all(k in trans and trans[k] and str(trans[k]).strip() 
+                          for k in ['action', 'date', 'security']):
+                        self.transactions.append(trans.copy())
+                        self.update_transaction_list()
+                
             QMessageBox.information(self, "Success", "CSV file imported successfully")
             return True
         except Exception as e:

@@ -128,7 +128,14 @@ class MockQComboBox(MockQWidget):
         if isinstance(parent, MockQDialog):
             parent.type_combo = self
             parent.fields = self.fields
-            parent.get_data = lambda: {'action': self._current_text, **{k: float(v.text()) if k in ('price', 'quantity', 'commission', 'amount') and v.text().strip() else v.text() for k, v in self.fields.items() if v.text().strip()}}
+            parent.get_data = lambda: {
+                'action': self._current_text,
+                'date': self.fields['date'].text().strip(),
+                'security': self.fields['security'].text().strip(),
+                **{k: float(v.text()) if k in ('price', 'quantity', 'commission', 'amount') and v.text().strip() else v.text() 
+                   for k, v in self.fields.items() 
+                   if k not in ('date', 'security') and v.text().strip()}
+            }
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
