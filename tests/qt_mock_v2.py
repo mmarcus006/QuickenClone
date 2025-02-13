@@ -146,6 +146,10 @@ class MockQDialog(MockQWidget):
                 self.result = True
                 self.exec_result = True
                 self.accepted.emit()  # Emit accepted signal for valid data
+            else:  # Invalid data
+                self.result = False
+                self.exec_result = False
+                self.rejected.emit()  # Emit rejected signal for invalid data
             
     def update_fields(self, action):
         """Update field visibility based on action"""
@@ -176,13 +180,11 @@ class MockQDialog(MockQWidget):
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid, return current result
-        if self.result:  # Dialog was accepted
-            self.accepted.emit()
-            return True
-        # Dialog was cancelled or not accepted
-        self.rejected.emit()
-        return False
+        # Data is valid, set result and return True
+        self.result = True
+        self.exec_result = True
+        self.accepted.emit()
+        return True
 
     def get_result(self):
         return self.result  # Return dialog result value
