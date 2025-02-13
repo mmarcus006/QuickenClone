@@ -145,10 +145,6 @@ class MockQDialog(MockQWidget):
             if data is not None:
                 self.result = True
                 self.exec_result = True
-            
-        # Fill data if editing
-        if transaction_data:
-            if 'action' in transaction_data:
                 self.type_combo.setCurrentText(transaction_data['action'])
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields and value is not None:
@@ -187,8 +183,15 @@ class MockQDialog(MockQWidget):
     def exec(self):
         """Execute the dialog and return True to simulate user clicking OK"""
         self.exec_called = True
-        # Check if dialog was cancelled
-        if not self.result:  # Dialog cancelled or invalid data
+        # Always validate data first
+        data = self.get_data()
+        if data is None:  # Invalid data
+            self.result = False
+            self.exec_result = False
+            self.rejected.emit()
+            return False
+        # Data is valid, check if dialog was accepted
+        if not self.result:  # Dialog cancelled
             self.exec_result = False
             self.rejected.emit()
             return False
