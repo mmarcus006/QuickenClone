@@ -66,7 +66,7 @@ class MockQDialog(MockQWidget):
             self.type_combo._current_text = transaction_data.get('action', '')
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields:
-                    self.fields[field].setText(str(value))
+                    self.fields[field]._text = str(value)
         
     def exec(self):
         if self.result:
@@ -130,9 +130,6 @@ class MockQComboBox(MockQWidget):
     def setCurrentText(self, text):
         self._current_text = str(text)
         self.currentTextChanged.emit(self._current_text)
-        if hasattr(self, 'fields'):
-            for field in self.fields.values():
-                field.setVisible(True)
 
 class MockQListWidget(MockQWidget):
     """Mock QListWidget"""
@@ -179,6 +176,9 @@ class MockQFileDialog:
         dirname = os.path.dirname(directory)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
+        # Create an empty file to ensure it exists
+        with open(directory, 'w') as f:
+            f.write("!Type:Invst\n")
         return directory, filter
 
 class MockQMessageBox:
