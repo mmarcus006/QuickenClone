@@ -133,7 +133,7 @@ class TransactionDialog(QDialog):
                             data[field] = text
         
         # Validate required fields
-        if not all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
+        if not all(k in data and data[k] and str(data[k]).strip() for k in ['date', 'action', 'security']):
             return None
             
         return data

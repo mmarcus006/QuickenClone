@@ -63,10 +63,10 @@ class MockQDialog(MockQWidget):
             self.fields[field]._text = ""
             self.fields[field]._visible = True
         if transaction_data:
-            self.type_combo._current_text = transaction_data['action']
+            self.type_combo._current_text = transaction_data.get('action', '')
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields:
-                    self.fields[field]._text = str(value)
+                    self.fields[field].setText(str(value))
         
     def exec(self):
         if self.result:
@@ -179,9 +179,6 @@ class MockQFileDialog:
         dirname = os.path.dirname(directory)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
-        # Create an empty file to ensure it exists
-        with open(directory, 'w') as f:
-            pass
         return directory, filter
 
 class MockQMessageBox:
