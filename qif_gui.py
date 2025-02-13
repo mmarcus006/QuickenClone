@@ -199,9 +199,11 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and all(k in data and data[k] for k in ['date', 'action', 'security']):
+            if data and all(k in data and str(data[k]).strip() for k in ['date', 'action', 'security']):
                 self.transactions.append(data.copy())
                 self.update_transaction_list()
+                return True
+        return False
     
     def edit_transaction(self, item):
         idx = self.transaction_list.row(item)
@@ -213,19 +215,21 @@ class QIFConverterGUI(QMainWindow):
     def duplicate_transaction(self):
         if not self.transaction_list.currentItem():
             QMessageBox.warning(self, "Error", "Please select a transaction to duplicate")
-            return
+            return False
             
         idx = self.transaction_list.currentRow()
         if idx < 0 or idx >= len(self.transactions):
-            return
+            return False
             
         data = self.transactions[idx].copy()
         dialog = TransactionDialog(self, data)
         if dialog.exec():
             new_data = dialog.get_data()
-            if new_data and all(k in new_data and new_data[k] for k in ['date', 'action', 'security']):
+            if new_data and all(k in new_data and str(new_data[k]).strip() for k in ['date', 'action', 'security']):
                 self.transactions.append(new_data.copy())
                 self.update_transaction_list()
+                return True
+        return False
     
     def delete_transaction(self):
         """Delete the selected transaction"""
@@ -295,12 +299,12 @@ class QIFConverterGUI(QMainWindow):
     def export_qif(self):
         if not self.transactions:
             QMessageBox.warning(self, "Error", "No transactions to export")
-            return
+            return False
             
         filename, _ = QFileDialog.getSaveFileName(
             self, "Export QIF File", "", "QIF Files (*.qif);;All Files (*.*)")
         if not filename:
-            return
+            return False
             
         try:
             # Create parent directory if it doesn't exist
@@ -337,9 +341,10 @@ class QIFConverterGUI(QMainWindow):
                 f.flush()
                 os.fsync(f.fileno())
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
+            return True
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error exporting to QIF: {str(e)}")
-            return
+            return False
 
 def main():
     app = QApplication(sys.argv)

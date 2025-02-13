@@ -106,6 +106,10 @@ class MockQLineEdit(MockQWidget):
         
     def isVisible(self):
         return bool(self._visible)
+        
+    def clear(self):
+        self._text = ""
+        self.textChanged.emit(self._text)
 
 class MockQComboBox(MockQWidget):
     """Mock QComboBox"""
