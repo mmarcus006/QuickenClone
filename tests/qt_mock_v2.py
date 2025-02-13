@@ -56,17 +56,17 @@ class MockQDialog(MockQWidget):
         self.result = True
         self.accepted = QtSignal()
         self.rejected = QtSignal()
-        self.type_combo = MockQComboBox()
+        self.type_combo = MockQComboBox(self)
         self.fields = {}
         for field in ['date', 'security', 'price', 'quantity', 'commission', 'memo', 'amount', 'account']:
-            self.fields[field] = MockQLineEdit()
+            self.fields[field] = MockQLineEdit(self)
             self.fields[field]._text = ""
             self.fields[field]._visible = True
         if transaction_data:
             self.type_combo._current_text = transaction_data.get('action', '')
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields:
-                    self.fields[field]._text = str(value)
+                    self.fields[field].setText(str(value))
         
     def exec(self):
         if self.result:
@@ -105,10 +105,9 @@ class MockQLineEdit(MockQWidget):
         self._visible = bool(visible)
         
     def isVisible(self):
-        if hasattr(self.parent(), 'type_combo') and hasattr(self.parent().type_combo, '_visible_fields'):
-            field_name = next((k for k, v in self.parent().fields.items() if v == self), None)
-            return field_name in self.parent().type_combo._visible_fields if field_name else True
-        return bool(self._visible)
+        if hasattr(self, '_visible'):
+            return bool(self._visible)
+        return True
         
     def clear(self):
         self._text = ""
@@ -121,17 +120,6 @@ class MockQComboBox(MockQWidget):
         self.items = []
         self._current_text = ""
         self.currentTextChanged = QtSignal()
-        self._visible_fields = {'date', 'security', 'amount'}  # Default visible fields
-        
-    def update_fields(self, action_type):
-        """Update visible fields based on action type"""
-        self._visible_fields = {'date', 'security', 'amount'}
-        if action_type in ['Buy', 'Sell']:
-            self._visible_fields.update({'price', 'quantity', 'commission'})
-        elif action_type in ['BuyX', 'SellX']:
-            self._visible_fields.update({'price', 'quantity', 'account'})
-        elif action_type in ['Div', 'IntInc']:
-            pass  # Only default fields
         
     def addItems(self, items):
         self.items.extend(items)
@@ -193,7 +181,7 @@ class MockQFileDialog:
             os.makedirs(dirname, exist_ok=True)
         # Create an empty file to ensure it exists
         with open(directory, 'w') as f:
-            f.write("!Type:Invst\n")
+            pass
         return directory, filter
 
 class MockQMessageBox:
