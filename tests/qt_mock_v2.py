@@ -154,6 +154,15 @@ class MockQDialog(MockQWidget):
             self.fields['quantity'].setText('10')
             self.fields['commission'].setText('4.95')
             self.fields['memo'].setText('Test buy')
+        else:
+            # Set test data for new transactions
+            self.type_combo.setCurrentText('Buy')
+            self.fields['date'].setText('01/15/2024')
+            self.fields['security'].setText('AAPL')
+            self.fields['price'].setText('185.92')
+            self.fields['quantity'].setText('10')
+            self.fields['commission'].setText('4.95')
+            self.fields['memo'].setText('Test buy')
             
     def update_fields(self, action):
         """Update field visibility based on action"""
