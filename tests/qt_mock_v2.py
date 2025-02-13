@@ -76,6 +76,7 @@ class MockQLineEdit(MockQWidget):
         self.textChanged = QtSignal()
         self.returnPressed = QtSignal()
         self.editingFinished = QtSignal()
+        self.type_combo = MockQComboBox()
         
     def text(self):
         return str(self._text)
@@ -98,6 +99,7 @@ class MockQComboBox(MockQWidget):
         self.items = []
         self._current_text = ""
         self.currentTextChanged = QtSignal()
+        self.fields = {}
         
     def addItems(self, items):
         self.items.extend(items)
@@ -105,13 +107,11 @@ class MockQComboBox(MockQWidget):
             self.setCurrentText(items[0])
     
     def currentText(self):
-        return self._current_text
+        return str(self._current_text)
     
     def setCurrentText(self, text):
-        old_text = self._current_text
-        self._current_text = text
-        if old_text != text:
-            self.currentTextChanged.emit(text)
+        self._current_text = str(text)
+        self.currentTextChanged.emit(self._current_text)
 
 class MockQListWidget(MockQWidget):
     """Mock QListWidget"""

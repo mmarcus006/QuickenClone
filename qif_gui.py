@@ -132,10 +132,6 @@ class TransactionDialog(QDialog):
                         if text:
                             data[field] = text
         
-        # Validate required fields
-        if not all(data.get(k) and str(data[k]).strip() for k in ['date', 'action', 'security']):
-            return None
-            
         return data
 
 class QIFConverterGUI(QMainWindow):
@@ -199,7 +195,7 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data and all(k in data and data[k] for k in ['date', 'action', 'security']):
+            if data:
                 self.transactions.append(data)
                 self.update_transaction_list()
     
