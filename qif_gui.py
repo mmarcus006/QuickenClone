@@ -378,6 +378,7 @@ class QIFConverterGUI(QMainWindow):
                 return False
                 
             # Write transactions
+            success = False
             with open(filename, 'w') as f:
                 # Write header
                 f.write('!Type:Invst\n')
@@ -400,10 +401,11 @@ class QIFConverterGUI(QMainWindow):
                         if 'memo' in trans and trans['memo']:
                             f.write(f'M{trans["memo"]}\n')
                         f.write('^\n')
+                        success = True
                     except (ValueError, TypeError) as e:
                         QMessageBox.warning(self, "Warning", f"Error writing transaction: {str(e)}")
                         continue
-                return True
+                return success
         except IOError as e:
             QMessageBox.critical(self, "Error", f"Failed to write file: {str(e)}")
             return False
