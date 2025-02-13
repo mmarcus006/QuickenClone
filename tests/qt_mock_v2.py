@@ -69,11 +69,8 @@ class MockQDialog(MockQWidget):
                     self.fields[field].setText(str(value))
         
     def exec(self):
-        if self.exec_result:
-            self.accepted.emit()
-            return True
-        self.rejected.emit()
-        return False
+        self.accepted.emit()
+        return True
     
     def accept(self):
         self.result = True
@@ -119,12 +116,15 @@ class MockQComboBox(MockQWidget):
         self._current_text = ""
         self.currentTextChanged = QtSignal()
         self._parent = parent
-        self._visible_fields = {'date', 'security', 'memo'}  # Default visible fields
+        self._visible_fields = {'date', 'security', 'memo', 'price', 'quantity', 'commission', 'amount', 'account'}
         self.result = True
         self.accepted = QtSignal()
         self.rejected = QtSignal()
         self.exec_result = True
         self.fields = {}
+        self.type_combo = self
+        if isinstance(parent, MockQDialog):
+            parent.type_combo = self
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""

@@ -323,7 +323,7 @@ class QIFConverterGUI(QMainWindow):
             
             # Create the file
             with open(filename, 'w') as f:
-                f.write(f"!Type:Invst\n")  # Use !Type:Invst instead of QIFType.INVESTMENT.value
+                f.write("!Type:Invst\n")  # Use !Type:Invst instead of QIFType.INVESTMENT.value
                 for trans in self.transactions:
                     f.write("^\n")  # Start transaction
                     f.write(f"D{trans['date']}\n")
@@ -343,6 +343,8 @@ class QIFConverterGUI(QMainWindow):
                     if trans.get('memo'):
                         f.write(f"M{trans['memo']}\n")
                 f.write("^\n")  # End last transaction
+                f.flush()
+                os.fsync(f.fileno())
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
             return True
         except Exception as e:
