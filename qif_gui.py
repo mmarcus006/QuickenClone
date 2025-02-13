@@ -131,7 +131,7 @@ class TransactionDialog(QDialog):
                         try:
                             data[field] = float(text)
                         except ValueError:
-                            data[field] = 0.0
+                            continue  # Skip invalid numeric fields
                     else:
                         data[field] = text
         
@@ -199,23 +199,32 @@ class QIFConverterGUI(QMainWindow):
         self.mapping = {}
     
     def add_transaction(self):
+        """Add a new transaction"""
         dialog = TransactionDialog(self)
-        if dialog.exec():
+        if dialog.exec():  # Dialog accepted
             data = dialog.get_data()
-            if data and data.get('date') and data.get('action') and data.get('security'):
-                self.transactions.append(data.copy())
+            if data and all(data.get(field) for field in ['action', 'date', 'security']):  # Valid data
+                self.transactions.append(data.copy())  # Make a copy to be safe
                 self.update_transaction_list()
                 return True
         return False
     
     def edit_transaction(self, item):
-        idx = self.transaction_list.row(item)
-        dialog = TransactionDialog(self, self.transactions[idx])
-        if dialog.exec():
-            self.transactions[idx] = dialog.get_data()
-            self.update_transaction_list()
+        """Edit an existing transaction"""
+        try:
+            idx = self.transaction_list.row(item)
+            if 0 <= idx < len(self.transactions):
+                dialog = TransactionDialog(self, self.transactions[idx])
+                if dialog.exec() and dialog.get_data():
+                    self.transactions[idx] = dialog.get_data()
+                    self.update_transaction_list()
+                    return True
+            return False
+        except (AttributeError, TypeError, ValueError):
+            return False
     
     def duplicate_transaction(self):
+        """Duplicate selected transaction"""
         if not self.transaction_list.currentItem():
             QMessageBox.warning(self, "Error", "Please select a transaction to duplicate")
             return False
@@ -226,11 +235,10 @@ class QIFConverterGUI(QMainWindow):
             
         data = self.transactions[idx].copy()
         dialog = TransactionDialog(self, data)
-        if dialog.exec():
+        if dialog.exec():  # Dialog accepted
             new_data = dialog.get_data()
-            if new_data and all(k in new_data and new_data[k] and str(new_data[k]).strip() 
-                              for k in ['date', 'action', 'security']):
-                self.transactions.append(new_data.copy())
+            if new_data and all(new_data.get(field) for field in ['action', 'date', 'security']):  # Valid data
+                self.transactions.append(new_data.copy())  # Make a copy to be safe
                 self.update_transaction_list()
                 return True
         return False
@@ -257,105 +265,159 @@ class QIFConverterGUI(QMainWindow):
             self.transaction_list.addItem(item_text)
     
     def import_csv(self):
+        """Import transactions from CSV file"""
         filename, _ = QFileDialog.getOpenFileName(
             self, "Import CSV File", "", "CSV Files (*.csv);;All Files (*.*)")
-        if not filename:
+        if not filename or not filename.strip():
             return False
             
         try:
+            # Create directory if it doesn't exist
+            dirname = os.path.dirname(filename)
+            if dirname:
+                os.makedirs(dirname, exist_ok=True)
+            
+            # Read CSV file
             with open(filename, 'r') as f:
+                # Parse CSV
                 reader = csv.DictReader(f)
-                field_map = {
-                    'Transaction Type': 'action',
-                    'Trade Date': 'date',
-                    'Symbol': 'security',
-                    'Price': 'price',
-                    'Quantity': 'quantity',
-                    'Commission': 'commission',
-                    'Notes': 'memo'
-                }
-                
-                for row in reader:
-                    trans = {}
-                    for csv_field, data_field in field_map.items():
-                        if csv_field in row:
-                            value = row[csv_field].strip()
-                            if value:  # Only process non-empty values
-                                if data_field in ['price', 'quantity', 'commission']:
-                                    try:
-                                        trans[data_field] = float(value)
-                                    except ValueError:
-                                        trans[data_field] = 0.0
-                                else:
-                                    trans[data_field] = value
+                if not reader.fieldnames:
+                    QMessageBox.warning(self, "Error", "Empty CSV file")
+                    return False
                     
-                    # Validate required fields
-                    if all(k in trans and trans[k] and str(trans[k]).strip() 
-                          for k in ['action', 'date', 'security']):
-                        self.transactions.append(trans.copy())
-                        self.update_transaction_list()
+                # Validate header
+                required_fields = ['Transaction Type', 'Trade Date', 'Symbol']
+                if not all(field in reader.fieldnames for field in required_fields):
+                    QMessageBox.warning(self, "Error", "Invalid CSV format")
+                    return False
                 
-            QMessageBox.information(self, "Success", "CSV file imported successfully")
-            return True
+                # Process rows
+                valid_rows = []
+                for row in reader:
+                    try:
+                        # Required fields must be present and non-empty
+                        if not all(row.get(field, '').strip() for field in required_fields):
+                            QMessageBox.warning(self, "Warning", "Skipping row with missing required fields")
+                            continue
+                            
+                        # Create transaction with required fields
+                        trans = {
+                            'action': row['Transaction Type'].strip(),
+                            'date': row['Trade Date'].strip(),
+                            'security': row['Symbol'].strip()
+                        }
+                        
+                        # Add optional numeric fields
+                        if 'Price' in row and row['Price'].strip():
+                            trans['price'] = float(row['Price'])
+                        if 'Quantity' in row and row['Quantity'].strip():
+                            trans['quantity'] = float(row['Quantity'])
+                        if 'Commission' in row and row['Commission'].strip():
+                            trans['commission'] = float(row['Commission'])
+                        if 'Notes' in row and row['Notes'].strip():
+                            trans['memo'] = row['Notes'].strip()
+                            
+                        valid_rows.append(trans)
+                    except (ValueError, KeyError) as e:
+                        QMessageBox.warning(self, "Warning", 
+                            f"Skipping invalid row: {str(e)}")
+                        continue
+                
+                # Update transactions and UI if we have valid rows
+                if valid_rows:
+                    self.transactions.extend(valid_rows)
+                    self.update_transaction_list()
+                    return True
+                
+                QMessageBox.warning(self, "Error", "No valid transactions found in CSV")
+                return False
+                    
+        except FileNotFoundError:
+            QMessageBox.warning(self, "Error", "File not found")
+            return False
+        except csv.Error as e:
+            QMessageBox.critical(self, "Error", f"Invalid CSV format: {str(e)}")
+            return False
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error importing CSV: {str(e)}")
             return False
     
     def export_qif(self):
+        """Export transactions to QIF file"""
         if not self.transactions:
-            QMessageBox.warning(self, "Error", "No transactions to export")
+            QMessageBox.warning(self, "Warning", "No transactions to export")
             return False
             
+        # Get filename
         filename, _ = QFileDialog.getSaveFileName(
             self, "Export QIF File", "", "QIF Files (*.qif);;All Files (*.*)")
-        if not filename:
+        if not filename or not filename.strip():
             return False
             
+        # Ensure .qif extension
+        if not filename.lower().endswith('.qif'):
+            filename += '.qif'
+            
         try:
-            # Create parent directory if it doesn't exist
+            # Create directory if it doesn't exist
             dirname = os.path.dirname(filename)
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
             
-            # Ensure file has .qif extension
-            if not filename.lower().endswith('.qif'):
-                filename += '.qif'
+            # Validate transactions before writing
+            valid_transactions = []
+            for trans in self.transactions:
+                if all(trans.get(field) and str(trans[field]).strip() 
+                      for field in ['date', 'action', 'security']):
+                    valid_transactions.append(trans)
+                else:
+                    QMessageBox.warning(self, "Warning", "Skipping transaction with missing required fields")
             
-            # Create the file
+            if not valid_transactions:
+                QMessageBox.warning(self, "Error", "No valid transactions to export")
+                return False
+                
+            # Write transactions
             with open(filename, 'w') as f:
-                f.write("!Type:Invst\n")  # Use !Type:Invst instead of QIFType.INVESTMENT.value
-                for trans in self.transactions:
-                    f.write("^\n")  # Start transaction
-                    f.write(f"D{trans['date']}\n")
-                    f.write(f"N{trans['action']}\n")
-                    if trans.get('security'):
-                        f.write(f"Y{trans['security']}\n")
-                    if trans.get('price'):
-                        f.write(f"I{trans['price']:.4f}\n")
-                    if trans.get('quantity'):
-                        f.write(f"Q{trans['quantity']:.4f}\n")
-                    if trans.get('commission'):
-                        f.write(f"O{trans['commission']:.2f}\n")
-                    if trans.get('amount'):
-                        f.write(f"T{trans['amount']:.2f}\n")
-                    if trans.get('account'):
-                        f.write(f"L[{trans['account']}]\n")
-                    if trans.get('memo'):
-                        f.write(f"M{trans['memo']}\n")
-                f.write("^\n")  # End last transaction
-                f.flush()
-                os.fsync(f.fileno())
-            QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
-            return True
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error exporting to QIF: {str(e)}")
+                # Write header
+                f.write('!Type:Invst\n')
+                
+                # Write transactions
+                for trans in valid_transactions:
+                    try:
+                        # Write required fields
+                        f.write(f'D{trans["date"]}\n')
+                        f.write(f'N{trans["action"]}\n')
+                        f.write(f'Y{trans["security"]}\n')
+                        
+                        # Optional numeric fields
+                        if 'price' in trans and trans['price'] is not None:
+                            f.write(f'I{float(trans["price"]):.4f}\n')
+                        if 'quantity' in trans and trans['quantity'] is not None:
+                            f.write(f'Q{float(trans["quantity"]):.4f}\n')
+                        if 'commission' in trans and trans['commission'] is not None:
+                            f.write(f'O{float(trans["commission"]):.2f}\n')
+                        if 'memo' in trans and trans['memo']:
+                            f.write(f'M{trans["memo"]}\n')
+                        f.write('^\n')
+                    except (ValueError, TypeError) as e:
+                        QMessageBox.warning(self, "Warning", f"Error writing transaction: {str(e)}")
+                        continue
+                return True
+        except IOError as e:
+            QMessageBox.critical(self, "Error", f"Failed to write file: {str(e)}")
             return False
 
+
 def main():
-    app = QApplication(sys.argv)
-    window = QIFConverterGUI()
-    window.show()
-    sys.exit(app.exec())
+    """Main entry point"""
+    try:
+        app = QApplication(sys.argv)
+        window = QIFConverterGUI()
+        window.show()
+        return app.exec()
+    except Exception:
+        return 1
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

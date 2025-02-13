@@ -1,308 +1,92 @@
-"""Mock Qt classes for testing"""
-import os
+"""Mock Qt modules for testing"""
 from unittest.mock import MagicMock
 
 class QtSignal:
-    """Mock Qt signal"""
     def __init__(self):
         self.callbacks = []
-        self.last_value = None
-    
+        
     def connect(self, callback):
         self.callbacks.append(callback)
-    
-    def emit(self, *args, **kwargs):
-        self.last_value = args[0] if args else None
+        
+    def emit(self):
         for callback in self.callbacks:
-            callback(*args, **kwargs)
+            callback()
 
 class MockQWidget:
-    """Base widget class"""
     def __init__(self, parent=None):
         self.parent = parent
         self.layout = None
-        self._visible = True
+        self.visible = True
         self.window_title = ""
-        self.minimum_width = 0
         
     def setLayout(self, layout):
         self.layout = layout
-    
+        
     def setVisible(self, visible):
-        self._visible = visible
-    
+        self.visible = visible
+        
     def isVisible(self):
-        return self._visible
-    
+        return self.visible
+        
     def setWindowTitle(self, title):
         self.window_title = title
-    
+        
     def setMinimumWidth(self, width):
-        self.minimum_width = width
+        pass
 
 class MockQMainWindow(MockQWidget):
-    """Mock QMainWindow"""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None):
+        super().__init__(parent)
         self.central_widget = None
         
     def setCentralWidget(self, widget):
         self.central_widget = widget
 
-class MockQDialog(MockQWidget):
-    """Mock QDialog"""
-    def __init__(self, parent=None, transaction_data=None):
-        super().__init__(parent)
-        self.result = True
-        self.accepted = QtSignal()
-        self.rejected = QtSignal()
-        self.type_combo = MockQComboBox(self)
-        self.fields = {}
-        for field in ['date', 'security', 'price', 'quantity', 'commission', 'memo', 'amount', 'account']:
-            self.fields[field] = MockQLineEdit(self)
-            self.fields[field]._text = ""
-            self.fields[field]._visible = True
-        if transaction_data:
-            self.type_combo._current_text = transaction_data.get('action', '')
-            for field, value in transaction_data.items():
-                if field != 'action' and field in self.fields:
-                    self.fields[field].setText(str(value))
-        
-    def exec(self):
-        self.accepted.emit()
-        self.result = True
-        return self.result
-    
-    def accept(self):
-        self.result = True
-        self.accepted.emit()
-        
-    def reject(self):
-        self.result = False
-        self.rejected.emit()
-
 class MockQLineEdit(MockQWidget):
-    """Mock QLineEdit"""
     def __init__(self, parent=None):
         super().__init__(parent)
         self._text = ""
         self._visible = True
-        self.textChanged = QtSignal()
-        self.returnPressed = QtSignal()
-        self.editingFinished = QtSignal()
         
     def text(self):
-        return str(self._text)
-    
+        return str(self._text).strip()
+        
     def setText(self, text):
         self._text = str(text)
-        self.textChanged.emit(self._text)
-        self.editingFinished.emit()
         
     def setVisible(self, visible):
         self._visible = bool(visible)
         
     def isVisible(self):
-        return self._visible
+        return bool(self._visible)
         
     def clear(self):
         self._text = ""
-        self.textChanged.emit(self._text)
 
 class MockQComboBox(MockQWidget):
-    """Mock QComboBox"""
-    def __init__(self, parent=None, transaction_data=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
+        self._current_text = "Buy"  # Default to Buy for investment transactions
         self.items = []
-        self._current_text = "Buy"  # Default to Buy
         self.currentTextChanged = QtSignal()
-        self._parent = parent
-        self._visible_fields = {'date', 'security', 'memo'}
-        self.result = True
-        self.accepted = QtSignal()
-        self.rejected = QtSignal()
-        self.exec_result = True
-        self.fields = {}
-        for field in ['date', 'security', 'price', 'quantity', 'commission', 'amount', 'account', 'memo']:
-            self.fields[field] = MockQLineEdit(self)
-        self.type_combo = self
-        
-        if transaction_data:
-            for field, value in transaction_data.items():
-                if field == 'action':
-                    self._current_text = value
-                elif field in self.fields:
-                    self.fields[field].setText(str(value))
-                    
-        if isinstance(parent, MockQDialog):
-            parent.type_combo = self
-            parent.fields = self.fields
-            parent.get_data = self.get_data
-            
-        self.update_fields(self._current_text)
-        
-        if transaction_data:
-            for field, value in transaction_data.items():
-                if field == 'action':
-                    self._current_text = value
-                elif field in self.fields:
-                    self.fields[field].setText(str(value))
-                    
-        if isinstance(parent, MockQDialog):
-            parent.type_combo = self
-            parent.fields = self.fields
-            parent.get_data = self.get_data
-        
-        if transaction_data:
-            for field, value in transaction_data.items():
-                if field == 'action':
-                    self._current_text = value
-                elif field in self.fields:
-                    self.fields[field].setText(str(value))
-                    
-        if isinstance(parent, MockQDialog):
-            parent.type_combo = self
-            parent.fields = self.fields
-            parent.get_data = self.get_data
-        
-        def get_data():
-            data = {
-                'action': self._current_text,
-                'date': self.fields['date'].text().strip(),
-                'security': self.fields['security'].text().strip(),
-                'price': float(self.fields['price'].text()) if self.fields['price'].text().strip() else 0.0,
-                'quantity': float(self.fields['quantity'].text()) if self.fields['quantity'].text().strip() else 0.0,
-                'commission': float(self.fields['commission'].text()) if self.fields['commission'].text().strip() else 0.0
-            }
-            memo = self.fields['memo'].text().strip()
-            if memo:
-                data['memo'] = memo
-            return data
-            
-        self.get_data = get_data
-        if isinstance(parent, MockQDialog):
-            parent.type_combo = self
-            parent.fields = self.fields
-            parent.get_data = get_data
-        
-        def get_data():
-            data = {
-                'action': self._current_text,
-                'date': self.fields['date'].text().strip(),
-                'security': self.fields['security'].text().strip(),
-                'price': float(self.fields['price'].text()) if self.fields['price'].text().strip() else 0.0,
-                'quantity': float(self.fields['quantity'].text()) if self.fields['quantity'].text().strip() else 0.0,
-                'commission': float(self.fields['commission'].text()) if self.fields['commission'].text().strip() else 0.0
-            }
-            memo = self.fields['memo'].text().strip()
-            if memo:
-                data['memo'] = memo
-            return data
-            
-        self.get_data = get_data
-        if isinstance(parent, MockQDialog):
-            parent.type_combo = self
-            parent.fields = self.fields
-            parent.get_data = get_data
-            
-        if transaction_data:
-            for field, value in transaction_data.items():
-                if field == 'action':
-                    self._current_text = value
-                elif field in self.fields:
-                    self.fields[field].setText(str(value))
-        
-        def get_data():
-            data = {
-                'action': self._current_text,
-                'date': self.fields['date'].text().strip(),
-                'security': self.fields['security'].text().strip(),
-                'price': float(self.fields['price'].text()) if self.fields['price'].text().strip() else 0.0,
-                'quantity': float(self.fields['quantity'].text()) if self.fields['quantity'].text().strip() else 0.0,
-                'commission': float(self.fields['commission'].text()) if self.fields['commission'].text().strip() else 0.0
-            }
-            memo = self.fields['memo'].text().strip()
-            if memo:
-                data['memo'] = memo
-            return data
-            
-        self.get_data = get_data
-        if transaction_data:
-            for field, value in transaction_data.items():
-                if field == 'action':
-                    self._current_text = value
-                elif field in self.fields:
-                    self.fields[field].setText(str(value))
-        if isinstance(parent, MockQDialog):
-            parent.type_combo = self
-            parent.fields = self.fields
-            parent.get_data = self.get_data
-            def get_data():
-                data = {
-                    'action': self._current_text,
-                    'date': self.fields['date'].text().strip(),
-                    'security': self.fields['security'].text().strip()
-                }
-                for field in ['price', 'quantity', 'commission', 'amount']:
-                    text = self.fields[field].text().strip()
-                    if text:
-                        try:
-                            data[field] = float(text)
-                        except ValueError:
-                            data[field] = 0.0
-                memo = self.fields['memo'].text().strip()
-                if memo:
-                    data['memo'] = memo
-                return data
-            parent.get_data = get_data
-        
-    def update_fields(self, action_type):
-        """Update visible fields based on action type"""
-        self._visible_fields = {'date', 'security', 'memo'}
-        self._current_text = action_type
-        if action_type in ['Buy', 'Sell']:
-            self._visible_fields.update({'price', 'quantity', 'commission'})
-        elif action_type in ['BuyX', 'SellX']:
-            self._visible_fields.update({'price', 'quantity', 'account'})
-        elif action_type in ['Div', 'IntInc']:
-            self._visible_fields.update({'amount'})
-        elif action_type in ['Div', 'IntInc']:
-            pass  # Only default fields
-        self._visible_fields = {'date', 'security', 'amount', 'price', 'quantity', 'commission', 'memo', 'account'}
-        
-    def update_fields(self, action_type):
-        """Update visible fields based on action type"""
-        self._visible_fields = {'date', 'security', 'memo'}
-        self._current_text = action_type
-        if action_type in ['Buy', 'Sell']:
-            self._visible_fields.update({'price', 'quantity', 'commission'})
-        elif action_type in ['BuyX', 'SellX']:
-            self._visible_fields.update({'price', 'quantity', 'account'})
-        elif action_type in ['Div', 'IntInc']:
-            self._visible_fields.update({'amount'})
-        elif action_type in ['Div', 'IntInc']:
-            pass  # Only default fields
         
     def addItems(self, items):
         self.items.extend(items)
-        if not self._current_text and items:
-            self.setCurrentText(items[0])
-    
+        
     def currentText(self):
         return str(self._current_text)
-    
+        
     def setCurrentText(self, text):
+        old_text = self._current_text
         self._current_text = str(text)
-        self.currentTextChanged.emit(self._current_text)
-        if hasattr(self._parent, 'update_fields'):
-            self._parent.update_fields(text)
+        if old_text != self._current_text:
+            self.currentTextChanged.emit()
 
 class MockQListWidget(MockQWidget):
-    """Mock QListWidget"""
     def __init__(self, parent=None):
         super().__init__(parent)
         self.items = []
-        self._current_row = -1
+        self._current_row = 0
         self.itemDoubleClicked = QtSignal()
         
     def addItem(self, item):
@@ -310,135 +94,264 @@ class MockQListWidget(MockQWidget):
         
     def clear(self):
         self.items = []
-        self._current_row = -1
+        self._current_row = 0
         
     def currentRow(self):
-        return self._current_row
-    
+        return int(self._current_row)
+        
     def currentItem(self):
         if 0 <= self._current_row < len(self.items):
             return self.items[self._current_row]
-        return self.items[0] if self.items else None
-    
+        return None
+        
     def setCurrentRow(self, row):
-        self._current_row = row
-        if 0 <= row < len(self.items):
-            return True
+        self._current_row = int(row)
+        
+    def row(self, item):
+        """Get row number for item"""
+        try:
+            return int(item)  # For test cases passing index directly
+        except (TypeError, ValueError):
+            try:
+                return self.items.index(item)
+            except ValueError:
+                return -1
+
+class MockQDialog(MockQWidget):
+    def __init__(self, parent=None, transaction_data=None):
+        super().__init__(parent)
+        self.result = True  # Start with True for valid data
+        self.accepted = QtSignal()
+        self.rejected = QtSignal()
+        self.type_combo = MockQComboBox(self)
+        self.fields = {}
+        self.exec_called = False
+        self.exec_result = True  # Track exec() result separately from dialog result
+        
+        # Initialize fields with default visibility
+        for field in ['date', 'security', 'price', 'quantity', 'commission', 'amount', 'account', 'memo']:
+            self.fields[field] = MockQLineEdit(self)
+            self.fields[field].setVisible(field not in ['account'])  # Hide account by default
+            
+        # Fill data if editing
+        if transaction_data:
+            if 'action' in transaction_data:
+                self.type_combo.setCurrentText(transaction_data['action'])
+            for field, value in transaction_data.items():
+                if field != 'action' and field in self.fields and value is not None:
+                    self.fields[field].setText(str(value))
+            self.result = True  # Set to True for valid data
+        else:
+            # Set test data
+            self.type_combo.setCurrentText('Buy')
+            self.fields['date'].setText('01/15/2024')
+            self.fields['security'].setText('AAPL')
+            self.fields['price'].setText('185.92')
+            self.fields['quantity'].setText('10')
+            self.fields['commission'].setText('4.95')
+            self.fields['memo'].setText('Test buy')
+            
+    def update_fields(self, action):
+        """Update field visibility based on action"""
+        # Hide all optional fields first
+        for field in ['price', 'quantity', 'commission', 'amount', 'account']:
+            self.fields[field].setVisible(False)
+            
+        # Show fields based on action
+        if action in ['Buy', 'Sell']:
+            self.fields['price'].setVisible(True)
+            self.fields['quantity'].setVisible(True)
+            self.fields['commission'].setVisible(True)
+            self.fields['amount'].setVisible(True)
+        elif action in ['Div', 'IntInc']:
+            self.fields['amount'].setVisible(True)
+        elif action in ['BuyX', 'SellX']:
+            self.fields['price'].setVisible(True)
+            self.fields['quantity'].setVisible(True)
+            self.fields['account'].setVisible(True)
+            
+    def exec(self):
+        """Execute the dialog and return True to simulate user clicking OK"""
+        self.exec_called = True
+        data = self.get_data()
+        if data is None:
+            self.result = False
+            self.exec_result = False
+            self.reject()
+            return False
+        self.result = True
+        self.exec_result = True
+        self.accept()
+        return True
+
+    def get_result(self):
+        return self.result  # Return dialog result value
+    
+    def accept(self):
+        if self.get_data() is not None:
+            self.result = True
+            self.exec_result = True
+            self.accepted.emit()
+        else:
+            self.result = False
+            self.exec_result = False
+            self.rejected.emit()
+        return True
+        
+    def reject(self):
+        self.result = False
+        self.exec_result = False
+        self.rejected.emit()
         return False
+        
+    def get_data(self):
+        """Get transaction data from dialog fields"""
+        try:
+            # Get values from fields
+            data = {
+                'action': str(self.type_combo.currentText()),
+                'date': str(self.fields['date'].text()),
+                'security': str(self.fields['security'].text())
+            }
+            
+            # Add optional fields if visible and not empty
+            optional_fields = {
+                'price': float,
+                'quantity': float,
+                'commission': float,
+                'amount': float,
+                'account': str,
+                'memo': str
+            }
+            
+            for field, convert in optional_fields.items():
+                if self.fields[field].isVisible() and self.fields[field].text():
+                    try:
+                        value = self.fields[field].text()
+                        if value:  # Only convert non-empty values
+                            data[field] = convert(value)
+                    except ValueError:
+                        continue
+            
+            # Ensure required fields have values
+            if not all(data.get(field) for field in ['action', 'date', 'security']):
+                return None
+                
+            # Make a deep copy to avoid reference issues
+            return dict(data)
+        except (ValueError, KeyError):
+            return None
 
 class MockQFileDialog:
-    """Mock QFileDialog"""
+    _return_empty = True
+    _last_filename = None
+    _mock_file = None
+    
     @staticmethod
     def getOpenFileName(parent=None, caption="", directory="", filter=""):
-        return directory or "/tmp/test.csv", filter
-    
+        if MockQFileDialog._return_empty:
+            return ("", "")
+        MockQFileDialog._last_filename = "test.csv"
+        return (MockQFileDialog._last_filename, "CSV Files (*.csv)")
+        
     @staticmethod
     def getSaveFileName(parent=None, caption="", directory="", filter=""):
-        if not directory:
-            directory = "/tmp/test.qif"
-        if not directory.lower().endswith('.qif'):
-            directory += '.qif'
-        # Create parent directory
-        dirname = os.path.dirname(directory)
-        if dirname:
-            os.makedirs(dirname, exist_ok=True)
-        # Create empty file
-        with open(directory, 'w') as f:
-            pass
-        return directory, filter
+        if MockQFileDialog._return_empty:
+            return ("", "")
+        MockQFileDialog._last_filename = "test.qif"
+        return (MockQFileDialog._last_filename, "QIF Files (*.qif)")
+        
+    def __init__(self):
+        pass
+        
+    @staticmethod
+    def reset():
+        MockQFileDialog._return_empty = True
+        MockQFileDialog._last_filename = None
+        MockQFileDialog._mock_file = None
+        
+    @staticmethod
+    def set_return_files():
+        MockQFileDialog._return_empty = False
+        
+    @staticmethod
+    def set_mock_file(mock_file):
+        MockQFileDialog._mock_file = mock_file
+        
+    def exec(self):
+        return True
 
 class MockQMessageBox:
-    """Mock QMessageBox"""
     Yes = 1
     No = 0
-    Ok = 2
-    Cancel = 3
+    Ok = 1
+    Cancel = 0
     
     @staticmethod
-    def question(parent=None, title="", text="", buttons=None, defaultButton=None):
+    def question(parent=None, title="", text=""):
         return MockQMessageBox.Yes
-    
+        
     @staticmethod
     def warning(parent=None, title="", text=""):
         return MockQMessageBox.Ok
-    
+        
     @staticmethod
     def information(parent=None, title="", text=""):
         return MockQMessageBox.Ok
-    
+        
     @staticmethod
     def critical(parent=None, title="", text=""):
         return MockQMessageBox.Ok
 
 class MockQVBoxLayout:
-    """Mock QVBoxLayout"""
     def __init__(self, parent=None):
+        self.parent = parent
         self.widgets = []
-        self.layouts = []
         
     def addWidget(self, widget):
         self.widgets.append(widget)
         
     def addLayout(self, layout):
-        self.layouts.append(layout)
+        self.widgets.append(layout)
 
 class MockQHBoxLayout(MockQVBoxLayout):
-    """Mock QHBoxLayout"""
     pass
 
 class MockQGroupBox(MockQWidget):
-    """Mock QGroupBox"""
     def __init__(self, title="", parent=None):
         super().__init__(parent)
         self.title = title
 
 class MockQPushButton(MockQWidget):
-    """Mock QPushButton"""
     def __init__(self, text="", parent=None):
         super().__init__(parent)
         self.text = text
-        self.clicked = QtSignal()
         
-    def setToolTip(self, text):
-        self.tooltip = text
+    def setToolTip(self, tooltip):
+        self.tooltip = tooltip
 
 class MockQDialogButtonBox(MockQWidget):
-    """Mock QDialogButtonBox"""
     class StandardButton:
-        Ok = 0x00000400
-        Cancel = 0x00000800
+        Ok = 1
+        Cancel = 2
         
-    def __init__(self, buttons=None, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.accepted = QtSignal()
-        self.rejected = QtSignal()
-        self.buttons = buttons
+        self.buttons = []
         
     def addButton(self, button, role):
-        pass
+        self.buttons.append((button, role))
 
-# Create mock Qt modules
-mock_qt = MagicMock()
-mock_widgets = MagicMock()
-mock_core = MagicMock()
+# Mock Qt modules and classes
+class MockQApplication:
+    def __init__(self):
+        self.exec = MagicMock(return_value=0)
 
-# Setup Qt Core constants
-mock_core.Qt = MagicMock()
-mock_core.Qt.AlignLeft = 1
-mock_core.Qt.AlignRight = 2
-mock_core.Qt.AlignCenter = 4
+class Qt:
+    AlignLeft = 1
+    AlignRight = 2
+    AlignCenter = 4
+    AlignVCenter = 8
 
-# Setup widget classes
-mock_widgets.QMainWindow = MockQMainWindow
-mock_widgets.QDialog = MockQDialog
-mock_widgets.QWidget = MockQWidget
-mock_widgets.QLineEdit = MockQLineEdit
-mock_widgets.QComboBox = MockQComboBox
-mock_widgets.QListWidget = MockQListWidget
-mock_widgets.QFileDialog = MockQFileDialog
-mock_widgets.QMessageBox = MockQMessageBox
-mock_widgets.QVBoxLayout = MockQVBoxLayout
-mock_widgets.QHBoxLayout = MockQHBoxLayout
-mock_widgets.QGroupBox = MockQGroupBox
-mock_widgets.QPushButton = MockQPushButton
-mock_widgets.QDialogButtonBox = MockQDialogButtonBox
+# Export mock classes
+__all__ = ['MockQDialog', 'MockQMainWindow', 'MockQApplication', 'Qt']
