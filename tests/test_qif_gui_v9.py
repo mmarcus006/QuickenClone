@@ -310,7 +310,7 @@ def test_export_qif(gui, tmp_path):
     invalid_dialog.fields['date'].setText('')  # Empty required field
     invalid_dialog.result = True  # Dialog accepted
     with patch('qif_gui.TransactionDialog', return_value=invalid_dialog):
-        assert gui.edit_transaction(gui.transaction_list.currentItem()) is False
+        assert gui.edit_transaction(0) is False
 
     # Test edit with exception
     with patch('qif_gui.TransactionDialog', side_effect=ValueError):

@@ -212,7 +212,10 @@ class QIFConverterGUI(QMainWindow):
     def edit_transaction(self, item):
         """Edit an existing transaction"""
         try:
-            idx = self.transaction_list.row(item)
+            if isinstance(item, int):
+                idx = item
+            else:
+                idx = self.transaction_list.row(item)
             if 0 <= idx < len(self.transactions):
                 dialog = TransactionDialog(self, self.transactions[idx])
                 if dialog.exec():  # Dialog accepted
