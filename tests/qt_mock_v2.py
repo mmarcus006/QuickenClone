@@ -63,10 +63,10 @@ class MockQDialog(MockQWidget):
             self.fields[field]._text = ""
             self.fields[field]._visible = True
         if transaction_data:
-            self.type_combo._current_text = transaction_data['action']
+            self.type_combo.setCurrentText(transaction_data['action'])
             for field, value in transaction_data.items():
                 if field != 'action' and field in self.fields:
-                    self.fields[field]._text = str(value)
+                    self.fields[field].setText(str(value))
         
     def exec(self):
         if self.result:
@@ -97,15 +97,15 @@ class MockQLineEdit(MockQWidget):
         return str(self._text)
     
     def setText(self, text):
-        self._text = text
-        self.textChanged.emit(str(self._text))
+        self._text = str(text)
+        self.textChanged.emit(self._text)
         self.editingFinished.emit()
         
     def setVisible(self, visible):
-        self._visible = visible
+        self._visible = bool(visible)
         
     def isVisible(self):
-        return self._visible
+        return bool(self._visible)
 
 class MockQComboBox(MockQWidget):
     """Mock QComboBox"""
@@ -128,6 +128,9 @@ class MockQComboBox(MockQWidget):
     def setCurrentText(self, text):
         self._current_text = str(text)
         self.currentTextChanged.emit(self._current_text)
+        if hasattr(self, 'fields'):
+            for field in self.fields.values():
+                field.setVisible(True)
 
 class MockQListWidget(MockQWidget):
     """Mock QListWidget"""
