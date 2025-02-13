@@ -145,7 +145,7 @@ class MockQDialog(MockQWidget):
             if data is not None:  # Valid data
                 self.result = True
                 self.exec_result = True
-            self.exec_result = False
+                self.accepted.emit()  # Emit accepted signal for valid data
             
     def update_fields(self, action):
         """Update field visibility based on action"""
