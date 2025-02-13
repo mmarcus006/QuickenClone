@@ -145,6 +145,9 @@ class MockQDialog(MockQWidget):
             if data is not None:
                 self.result = True
                 self.exec_result = True
+            else:
+                self.result = False
+                self.exec_result = False
         else:
             # Initialize with empty fields
             self.result = False
@@ -174,14 +177,16 @@ class MockQDialog(MockQWidget):
         self.exec_called = True
         # Always validate data first
         data = self.get_data()
-        if data is None or not self.result:  # Invalid data or cancelled
+        if data is None:  # Invalid data
             self.result = False
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid and accepted
-        self.result = True
-        self.exec_result = True
+        # Data is valid, check if dialog was accepted
+        if not self.result:  # Dialog cancelled
+            self.rejected.emit()
+            return False
+        # Dialog accepted with valid data
         self.accepted.emit()
         return True
 
