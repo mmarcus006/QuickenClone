@@ -177,26 +177,27 @@ class MockQDialog(MockQWidget):
         if data is None:
             self.result = False
             self.exec_result = False
-            self.reject()
+            self.rejected.emit()
             return False
         self.result = True
         self.exec_result = True
-        self.accept()
+        self.accepted.emit()
         return True
 
     def get_result(self):
         return self.result  # Return dialog result value
     
     def accept(self):
-        if self.get_data() is not None:
+        data = self.get_data()
+        if data is not None:
             self.result = True
             self.exec_result = True
             self.accepted.emit()
-        else:
-            self.result = False
-            self.exec_result = False
-            self.rejected.emit()
-        return True
+            return True
+        self.result = False
+        self.exec_result = False
+        self.rejected.emit()
+        return False
         
     def reject(self):
         self.result = False
@@ -234,7 +235,7 @@ class MockQDialog(MockQWidget):
                         continue
             
             # Ensure required fields have values
-            if not all(data.get(field) for field in ['action', 'date', 'security']):
+            if not all(data.get(field) and str(data[field]).strip() for field in ['action', 'date', 'security']):
                 return None
                 
             # Make a deep copy to avoid reference issues
@@ -259,6 +260,7 @@ class MockQFileDialog:
         if MockQFileDialog._return_empty:
             return ("", "")
         MockQFileDialog._last_filename = "test.qif"
+        MockQFileDialog._return_empty = False
         return (MockQFileDialog._last_filename, "QIF Files (*.qif)")
         
     def __init__(self):
