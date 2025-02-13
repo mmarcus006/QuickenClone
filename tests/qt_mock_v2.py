@@ -145,9 +145,8 @@ class MockQDialog(MockQWidget):
             if data is not None:
                 self.result = True
                 self.exec_result = True
-            self.result = self.get_data() is not None
         else:
-            # Set test data
+            # Set test data for new transactions
             self.type_combo.setCurrentText('Buy')
             self.fields['date'].setText('01/15/2024')
             self.fields['security'].setText('AAPL')
@@ -185,12 +184,8 @@ class MockQDialog(MockQWidget):
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid, check if dialog was accepted
-        if not self.result:  # Dialog cancelled
-            self.exec_result = False
-            self.rejected.emit()
-            return False
-        # Dialog accepted with valid data
+        # Data is valid, set result and return
+        self.result = True
         self.exec_result = True
         self.accepted.emit()
         return True
