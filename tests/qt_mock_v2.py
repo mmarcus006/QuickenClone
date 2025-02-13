@@ -128,10 +128,12 @@ class MockQComboBox(MockQWidget):
         if isinstance(parent, MockQDialog):
             parent.type_combo = self
             parent.fields = self.fields
+            parent.get_data = lambda: {'action': self._current_text, **{k: float(v.text()) if k in ('price', 'quantity', 'commission', 'amount') and v.text().strip() else v.text() for k, v in self.fields.items() if v.text().strip()}}
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
         self._visible_fields = {'date', 'security', 'amount', 'memo', 'price', 'quantity', 'commission'}
+        self._current_text = action_type
         if action_type in ['Buy', 'Sell', 'BuyX', 'SellX']:
             self._visible_fields.update({'price', 'quantity', 'commission'})
         elif action_type in ['BuyX', 'SellX']:
@@ -143,6 +145,7 @@ class MockQComboBox(MockQWidget):
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
         self._visible_fields = {'date', 'security', 'amount', 'memo', 'price', 'quantity', 'commission'}
+        self._current_text = action_type
         if action_type in ['Buy', 'Sell', 'BuyX', 'SellX']:
             self._visible_fields.update({'price', 'quantity', 'commission'})
         elif action_type in ['BuyX', 'SellX']:
@@ -209,6 +212,9 @@ class MockQFileDialog:
         dirname = os.path.dirname(directory)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
+        # Create an empty file to ensure it exists
+        with open(directory, 'w') as f:
+            f.write("!Type:Invst\n")  # Write header to ensure file exists
         return directory, filter
 
 class MockQMessageBox:
