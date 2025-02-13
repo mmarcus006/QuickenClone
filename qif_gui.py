@@ -399,7 +399,7 @@ class QIFConverterGUI(QMainWindow):
                     if 'memo' in trans and trans['memo']:
                         f.write(f'M{trans["memo"]}\n')
                     f.write('^\n')
-                return True
+            return True
         except (IOError, OSError) as e:
             QMessageBox.critical(self, "Error", f"Failed to write file: {str(e)}")
             return False

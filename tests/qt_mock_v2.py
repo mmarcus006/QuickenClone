@@ -252,6 +252,8 @@ class MockQFileDialog:
     def getOpenFileName(parent=None, caption="", directory="", filter=""):
         if MockQFileDialog._return_empty:
             return ("", "")
+        if MockQFileDialog._mock_file:
+            return (MockQFileDialog._mock_file, "CSV Files (*.csv)")
         MockQFileDialog._last_filename = "test.csv"
         MockQFileDialog._return_empty = False
         return (MockQFileDialog._last_filename, "CSV Files (*.csv)")
@@ -260,6 +262,8 @@ class MockQFileDialog:
     def getSaveFileName(parent=None, caption="", directory="", filter=""):
         if MockQFileDialog._return_empty:
             return ("", "")
+        if MockQFileDialog._mock_file:
+            return (MockQFileDialog._mock_file, "QIF Files (*.qif)")
         MockQFileDialog._last_filename = "test.qif"
         MockQFileDialog._return_empty = False
         return (MockQFileDialog._last_filename, "QIF Files (*.qif)")
