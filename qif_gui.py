@@ -131,7 +131,7 @@ class TransactionDialog(QDialog):
                         try:
                             data[field] = float(text)
                         except ValueError:
-                            continue
+                            data[field] = 0.0
                     else:
                         data[field] = text
         
@@ -202,7 +202,8 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self)
         if dialog.exec():
             data = dialog.get_data()
-            if data:  # get_data() already validates required fields
+            if data and all(k in data and data[k] and str(data[k]).strip() 
+                          for k in ['date', 'action', 'security']):
                 self.transactions.append(data.copy())
                 self.update_transaction_list()
                 return True
@@ -228,7 +229,8 @@ class QIFConverterGUI(QMainWindow):
         dialog = TransactionDialog(self, data)
         if dialog.exec():
             new_data = dialog.get_data()
-            if new_data:  # get_data() already validates required fields
+            if new_data and all(k in new_data and new_data[k] and str(new_data[k]).strip() 
+                              for k in ['date', 'action', 'security']):
                 self.transactions.append(new_data.copy())
                 self.update_transaction_list()
                 return True

@@ -131,8 +131,8 @@ class MockQComboBox(MockQWidget):
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
-        self._visible_fields = {'date', 'security', 'amount', 'memo'}
-        if action_type in ['Buy', 'Sell']:
+        self._visible_fields = {'date', 'security', 'amount', 'memo', 'price', 'quantity', 'commission'}
+        if action_type in ['Buy', 'Sell', 'BuyX', 'SellX']:
             self._visible_fields.update({'price', 'quantity', 'commission'})
         elif action_type in ['BuyX', 'SellX']:
             self._visible_fields.update({'price', 'quantity', 'account'})
@@ -142,8 +142,8 @@ class MockQComboBox(MockQWidget):
         
     def update_fields(self, action_type):
         """Update visible fields based on action type"""
-        self._visible_fields = {'date', 'security', 'amount', 'memo'}
-        if action_type in ['Buy', 'Sell']:
+        self._visible_fields = {'date', 'security', 'amount', 'memo', 'price', 'quantity', 'commission'}
+        if action_type in ['Buy', 'Sell', 'BuyX', 'SellX']:
             self._visible_fields.update({'price', 'quantity', 'commission'})
         elif action_type in ['BuyX', 'SellX']:
             self._visible_fields.update({'price', 'quantity', 'account'})
