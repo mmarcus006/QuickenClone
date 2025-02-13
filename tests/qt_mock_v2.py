@@ -179,9 +179,11 @@ class MockQDialog(MockQWidget):
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid, set result and emit accepted
-        self.result = True
-        self.exec_result = True
+        # Data is valid, check if dialog was accepted
+        if not self.result:  # Dialog cancelled or not accepted
+            self.rejected.emit()
+            return False
+        # Dialog accepted with valid data
         self.accepted.emit()
         return True
 

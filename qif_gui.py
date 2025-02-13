@@ -231,7 +231,7 @@ class QIFConverterGUI(QMainWindow):
             # Update transaction
             self.transactions[idx] = data
             self.update_transaction_list()
-            return True  # Return True for successful update
+            return data is not None  # Return True only if data is valid
         except (AttributeError, TypeError, ValueError) as e:
             QMessageBox.critical(self, "Error", f"Failed to edit transaction: {str(e)}")
             return False
