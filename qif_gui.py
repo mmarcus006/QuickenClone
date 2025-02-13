@@ -110,11 +110,12 @@ class TransactionDialog(QDialog):
     
     def get_data(self):
         """Get the transaction data"""
-        data = {
-            'action': self.type_combo.currentText(),
-            'date': self.fields['date'].text().strip(),
-            'security': self.fields['security'].text().strip()
-        }
+        data = {}
+        
+        # Get required fields
+        data['action'] = self.type_combo.currentText()
+        data['date'] = self.fields['date'].text().strip()
+        data['security'] = self.fields['security'].text().strip()
         
         # Add other fields if they're visible and not empty
         for field, widget in self.fields.items():
@@ -130,10 +131,6 @@ class TransactionDialog(QDialog):
                     else:
                         if text:
                             data[field] = text
-        
-        # Validate required fields
-        if not all(data.get(k) for k in ['date', 'action', 'security']):
-            return None
         
         return data
 
