@@ -222,7 +222,6 @@ class QIFConverterGUI(QMainWindow):
             dialog = TransactionDialog(self, self.transactions[idx])
             # Run dialog and validate
             if not dialog.exec():  # Dialog cancelled or validation failed
-                QMessageBox.warning(self, "Error", "Invalid transaction data")
                 return False
             # Get data after successful dialog
             data = dialog.get_data()
