@@ -81,8 +81,8 @@ class MockQLineEdit(MockQWidget):
         return self._text if self._text is not None else ""
     
     def setText(self, text):
-        self._text = str(text) if text is not None else None
-        self.textChanged.emit(self._text if self._text is not None else "")
+        self._text = str(text) if text is not None else ""
+        self.textChanged.emit(self._text)
         self.editingFinished.emit()
         
     def setVisible(self, visible):
