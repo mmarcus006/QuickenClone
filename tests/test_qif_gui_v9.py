@@ -310,6 +310,29 @@ def test_export_qif(gui, tmp_path):
     invalid_dialog.fields['date'].setText('')  # Empty required field
     invalid_dialog.fields['security'].setText('AAPL')
     invalid_dialog.type_combo.setCurrentText(InvestmentAction.BUY.value)
+    invalid_dialog.result = False  # Dialog starts with False
+    with patch('qif_gui.TransactionDialog', return_value=invalid_dialog), \
+         patch('qif_gui.QMessageBox', MockQMessageBox):
+        assert gui.edit_transaction(0) is False  # Should fail due to invalid data
+        
+    # Test edit with invalid price format
+    invalid_dialog = MockQDialog()
+    invalid_dialog.fields['date'].setText('01/15/2024')
+    invalid_dialog.fields['security'].setText('AAPL')
+    invalid_dialog.fields['price'].setText('invalid')  # Invalid price
+    invalid_dialog.type_combo.setCurrentText(InvestmentAction.BUY.value)
+    invalid_dialog.result = False  # Dialog starts with False
+    with patch('qif_gui.TransactionDialog', return_value=invalid_dialog), \
+         patch('qif_gui.QMessageBox', MockQMessageBox):
+        assert gui.edit_transaction(0) is False  # Should fail due to invalid data
+        
+    # Test edit with invalid quantity format
+    invalid_dialog = MockQDialog()
+    invalid_dialog.fields['date'].setText('01/15/2024')
+    invalid_dialog.fields['security'].setText('AAPL')
+    invalid_dialog.fields['quantity'].setText('invalid')  # Invalid quantity
+    invalid_dialog.type_combo.setCurrentText(InvestmentAction.BUY.value)
+    invalid_dialog.result = False  # Dialog starts with False
     with patch('qif_gui.TransactionDialog', return_value=invalid_dialog), \
          patch('qif_gui.QMessageBox', MockQMessageBox):
         assert gui.edit_transaction(0) is False  # Should fail due to invalid data
