@@ -248,7 +248,8 @@ def test_export_qif(gui, tmp_path):
     """Test exporting to QIF"""
     # Test empty transactions list
     with patch('qif_gui.QMessageBox', MockQMessageBox), \
-         patch('qif_gui.QFileDialog.getSaveFileName', return_value=('', '')):
+         patch('qif_gui.QFileDialog', MockQFileDialog):
+        MockQFileDialog.set_mock_file('')
         assert gui.export_qif() is False
 
     # Test successful export
@@ -519,8 +520,9 @@ def test_export_qif(gui, tmp_path):
 def test_import_csv(gui, tmp_path):
     """Test importing from CSV"""
     # Test import with invalid path
-    with patch('qif_gui.QFileDialog.getOpenFileName', return_value=('', '')), \
+    with patch('qif_gui.QFileDialog', MockQFileDialog), \
          patch('qif_gui.QMessageBox', MockQMessageBox):
+        MockQFileDialog.set_mock_file('')
         assert gui.import_csv() is False
 
     # Test successful import

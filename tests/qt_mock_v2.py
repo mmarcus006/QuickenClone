@@ -268,6 +268,12 @@ class MockQFileDialog:
         MockQFileDialog._return_empty = False
         return (MockQFileDialog._last_filename, "QIF Files (*.qif)")
         
+    @staticmethod
+    def set_mock_file(mock_file):
+        """Set mock file for testing"""
+        MockQFileDialog._mock_file = mock_file
+        MockQFileDialog._return_empty = not bool(mock_file)
+        
     def __init__(self):
         pass
         
