@@ -213,6 +213,10 @@ class MockQDialog(MockQWidget):
                 'security': str(self.fields['security'].text())
             }
             
+            # Ensure required fields have values
+            if not all(data.get(field) and str(data[field]).strip() for field in ['action', 'date', 'security']):
+                return None
+            
             # Add optional fields if visible and not empty
             optional_fields = {
                 'price': float,
@@ -226,15 +230,11 @@ class MockQDialog(MockQWidget):
             for field, convert in optional_fields.items():
                 if self.fields[field].isVisible() and self.fields[field].text():
                     try:
-                        value = self.fields[field].text()
+                        value = str(self.fields[field].text()).strip()
                         if value:  # Only convert non-empty values
                             data[field] = convert(value)
                     except ValueError:
                         continue
-            
-            # Ensure required fields have values
-            if not all(data.get(field) and str(data[field]).strip() for field in ['action', 'date', 'security']):
-                return None
                 
             # Make a deep copy to avoid reference issues
             return dict(data)
