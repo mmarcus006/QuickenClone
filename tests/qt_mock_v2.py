@@ -105,6 +105,9 @@ class MockQLineEdit(MockQWidget):
         self._visible = bool(visible)
         
     def isVisible(self):
+        if hasattr(self.parent(), 'type_combo') and hasattr(self.parent().type_combo, '_visible_fields'):
+            field_name = next((k for k, v in self.parent().fields.items() if v == self), None)
+            return field_name in self.parent().type_combo._visible_fields if field_name else True
         return bool(self._visible)
         
     def clear(self):
@@ -118,6 +121,17 @@ class MockQComboBox(MockQWidget):
         self.items = []
         self._current_text = ""
         self.currentTextChanged = QtSignal()
+        self._visible_fields = {'date', 'security', 'amount'}  # Default visible fields
+        
+    def update_fields(self, action_type):
+        """Update visible fields based on action type"""
+        self._visible_fields = {'date', 'security', 'amount'}
+        if action_type in ['Buy', 'Sell']:
+            self._visible_fields.update({'price', 'quantity', 'commission'})
+        elif action_type in ['BuyX', 'SellX']:
+            self._visible_fields.update({'price', 'quantity', 'account'})
+        elif action_type in ['Div', 'IntInc']:
+            pass  # Only default fields
         
     def addItems(self, items):
         self.items.extend(items)
@@ -130,6 +144,7 @@ class MockQComboBox(MockQWidget):
     def setCurrentText(self, text):
         self._current_text = str(text)
         self.currentTextChanged.emit(self._current_text)
+        self.update_fields(text)
 
 class MockQListWidget(MockQWidget):
     """Mock QListWidget"""
