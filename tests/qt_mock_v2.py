@@ -78,11 +78,11 @@ class MockQLineEdit(MockQWidget):
         self.editingFinished = QtSignal()
         
     def text(self):
-        return self._text if self._text is not None else ""
+        return str(self._text)
     
     def setText(self, text):
-        self._text = str(text) if text is not None else ""
-        self.textChanged.emit(self._text)
+        self._text = text
+        self.textChanged.emit(str(self._text))
         self.editingFinished.emit()
         
     def setVisible(self, visible):
@@ -158,6 +158,9 @@ class MockQFileDialog:
         dirname = os.path.dirname(directory)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
+        # Create an empty file to ensure it exists
+        with open(directory, 'w') as f:
+            pass
         return directory, filter
 
 class MockQMessageBox:
