@@ -221,7 +221,7 @@ class QIFConverterGUI(QMainWindow):
                 return False
             dialog = TransactionDialog(self, self.transactions[idx])
             # Run dialog and validate
-            if not dialog.exec():  # Dialog cancelled
+            if not dialog.exec():  # Dialog cancelled or validation failed
                 return False
             # Get data after successful dialog
             data = dialog.get_data()

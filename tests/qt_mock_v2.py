@@ -145,8 +145,10 @@ class MockQDialog(MockQWidget):
             if data is not None:
                 self.result = True
                 self.exec_result = True
-            self.fields['commission'].setText('4.95')
-            self.fields['memo'].setText('Test buy')
+        else:
+            # Initialize with empty fields
+            self.result = False
+            self.exec_result = False
             
     def update_fields(self, action):
         """Update field visibility based on action"""
@@ -172,12 +174,12 @@ class MockQDialog(MockQWidget):
         self.exec_called = True
         # Always validate data first
         data = self.get_data()
-        if data is None:  # Invalid data
+        if data is None or not self.result:  # Invalid data or cancelled
             self.result = False
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid, set result and return
+        # Data is valid and accepted
         self.result = True
         self.exec_result = True
         self.accepted.emit()
