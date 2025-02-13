@@ -113,7 +113,7 @@ class MockQComboBox(MockQWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.items = []
-        self._current_text = ""
+        self._current_text = "Buy"  # Default to Buy
         self.currentTextChanged = QtSignal()
         self._parent = parent
         self._visible_fields = {'date', 'security', 'memo', 'price', 'quantity', 'commission', 'amount', 'account'}
@@ -209,9 +209,6 @@ class MockQFileDialog:
         dirname = os.path.dirname(directory)
         if dirname:
             os.makedirs(dirname, exist_ok=True)
-        # Create an empty file to ensure it exists
-        with open(directory, 'w') as f:
-            f.write("!Type:Invst\n")  # Write header to ensure file exists
         return directory, filter
 
 class MockQMessageBox:
