@@ -293,6 +293,7 @@ class QIFConverterGUI(QMainWindow):
                 
                 # Process rows
                 valid_rows = []
+                success = False
                 for row in reader:
                     try:
                         # Required fields must be present and non-empty
@@ -318,6 +319,7 @@ class QIFConverterGUI(QMainWindow):
                             trans['memo'] = row['Notes'].strip()
                             
                         valid_rows.append(trans)
+                        success = True
                     except (ValueError, KeyError) as e:
                         QMessageBox.warning(self, "Warning", 
                             f"Skipping invalid row: {str(e)}")
@@ -327,7 +329,7 @@ class QIFConverterGUI(QMainWindow):
                 if valid_rows:
                     self.transactions.extend(valid_rows)
                     self.update_transaction_list()
-                    return True
+                    return success
                 
                 QMessageBox.warning(self, "Error", "No valid transactions found in CSV")
                 return False
@@ -378,36 +380,38 @@ class QIFConverterGUI(QMainWindow):
                 return False
                 
             # Write transactions
-            success = False
-            with open(filename, 'w') as f:
-                # Write header
-                f.write('!Type:Invst\n')
-                
-                # Write transactions
-                for trans in valid_transactions:
-                    try:
-                        # Write required fields
-                        f.write(f'D{trans["date"]}\n')
-                        f.write(f'N{trans["action"]}\n')
-                        f.write(f'Y{trans["security"]}\n')
-                        
-                        # Optional numeric fields
-                        if 'price' in trans and trans['price'] is not None:
-                            f.write(f'I{float(trans["price"]):.4f}\n')
-                        if 'quantity' in trans and trans['quantity'] is not None:
-                            f.write(f'Q{float(trans["quantity"]):.4f}\n')
-                        if 'commission' in trans and trans['commission'] is not None:
-                            f.write(f'O{float(trans["commission"]):.2f}\n')
-                        if 'memo' in trans and trans['memo']:
-                            f.write(f'M{trans["memo"]}\n')
-                        f.write('^\n')
-                        success = True
-                    except (ValueError, TypeError) as e:
-                        QMessageBox.warning(self, "Warning", f"Error writing transaction: {str(e)}")
-                        continue
-                return success
-        except IOError as e:
-            QMessageBox.critical(self, "Error", f"Failed to write file: {str(e)}")
+            try:
+                with open(filename, 'w') as f:
+                    # Write header
+                    f.write('!Type:Invst\n')
+                    
+                    # Write transactions
+                    for trans in valid_transactions:
+                        try:
+                            # Write required fields
+                            f.write(f'D{trans["date"]}\n')
+                            f.write(f'N{trans["action"]}\n')
+                            f.write(f'Y{trans["security"]}\n')
+                            
+                            # Optional numeric fields
+                            if 'price' in trans and trans['price'] is not None:
+                                f.write(f'I{float(trans["price"]):.4f}\n')
+                            if 'quantity' in trans and trans['quantity'] is not None:
+                                f.write(f'Q{float(trans["quantity"]):.4f}\n')
+                            if 'commission' in trans and trans['commission'] is not None:
+                                f.write(f'O{float(trans["commission"]):.2f}\n')
+                            if 'memo' in trans and trans['memo']:
+                                f.write(f'M{trans["memo"]}\n')
+                            f.write('^\n')
+                        except (ValueError, TypeError) as e:
+                            QMessageBox.warning(self, "Warning", f"Error writing transaction: {str(e)}")
+                            continue
+                return True
+            except IOError as e:
+                QMessageBox.critical(self, "Error", f"Failed to write file: {str(e)}")
+                return False
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Failed to create directory: {str(e)}")
             return False
 
 
