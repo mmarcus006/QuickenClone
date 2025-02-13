@@ -233,7 +233,9 @@ class QIFConverterGUI(QMainWindow):
             for field in ['price', 'quantity', 'commission', 'amount']:
                 if field in data:
                     try:
-                        data[field] = float(data[field])
+                        value = str(data[field]).strip()
+                        if value:
+                            data[field] = float(value)
                     except (TypeError, ValueError):
                         QMessageBox.warning(self, "Error", f"Invalid {field} value")
                         return False
