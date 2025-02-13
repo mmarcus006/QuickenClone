@@ -132,7 +132,7 @@ class TransactionDialog(QDialog):
                             data[field] = text
         
         # Validate required fields
-        if not all(k in data and data[k] and str(data[k]).strip() for k in ['date', 'action', 'security']):
+        if not all(data.get(k) for k in ['date', 'action', 'security']):
             return None
         
         return data
@@ -333,8 +333,6 @@ class QIFConverterGUI(QMainWindow):
                     if trans.get('memo'):
                         f.write(f"M{trans['memo']}\n")
                 f.write("^\n")  # End last transaction
-                f.flush()
-                os.fsync(f.fileno())
             QMessageBox.information(self, "Success", "Transactions exported to QIF successfully")
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error exporting to QIF: {str(e)}")
