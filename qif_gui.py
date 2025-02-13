@@ -358,58 +358,50 @@ class QIFConverterGUI(QMainWindow):
         if not filename.lower().endswith('.qif'):
             filename += '.qif'
             
+        # Validate transactions before writing
+        valid_transactions = []
+        for trans in self.transactions:
+            if all(trans.get(field) and str(trans[field]).strip() 
+                  for field in ['date', 'action', 'security']):
+                valid_transactions.append(trans)
+            else:
+                QMessageBox.warning(self, "Warning", "Skipping transaction with missing required fields")
+        
+        if not valid_transactions:
+            QMessageBox.warning(self, "Error", "No valid transactions to export")
+            return False
+            
         try:
             # Create directory if it doesn't exist
             dirname = os.path.dirname(filename)
             if dirname:
                 os.makedirs(dirname, exist_ok=True)
-            
-            # Validate transactions before writing
-            valid_transactions = []
-            for trans in self.transactions:
-                if all(trans.get(field) and str(trans[field]).strip() 
-                      for field in ['date', 'action', 'security']):
-                    valid_transactions.append(trans)
-                else:
-                    QMessageBox.warning(self, "Warning", "Skipping transaction with missing required fields")
-            
-            if not valid_transactions:
-                QMessageBox.warning(self, "Error", "No valid transactions to export")
-                return False
                 
             # Write transactions
-            try:
-                with open(filename, 'w') as f:
-                    # Write header
-                    f.write('!Type:Invst\n')
+            with open(filename, 'w') as f:
+                # Write header
+                f.write('!Type:Invst\n')
+                
+                # Write transactions
+                for trans in valid_transactions:
+                    # Write required fields
+                    f.write(f'D{trans["date"]}\n')
+                    f.write(f'N{trans["action"]}\n')
+                    f.write(f'Y{trans["security"]}\n')
                     
-                    # Write transactions
-                    for trans in valid_transactions:
-                        try:
-                            # Write required fields
-                            f.write(f'D{trans["date"]}\n')
-                            f.write(f'N{trans["action"]}\n')
-                            f.write(f'Y{trans["security"]}\n')
-                            
-                            # Optional numeric fields
-                            if 'price' in trans and trans['price'] is not None:
-                                f.write(f'I{float(trans["price"]):.4f}\n')
-                            if 'quantity' in trans and trans['quantity'] is not None:
-                                f.write(f'Q{float(trans["quantity"]):.4f}\n')
-                            if 'commission' in trans and trans['commission'] is not None:
-                                f.write(f'O{float(trans["commission"]):.2f}\n')
-                            if 'memo' in trans and trans['memo']:
-                                f.write(f'M{trans["memo"]}\n')
-                            f.write('^\n')
-                        except (ValueError, TypeError) as e:
-                            QMessageBox.warning(self, "Warning", f"Error writing transaction: {str(e)}")
-                            continue
+                    # Optional numeric fields
+                    if 'price' in trans and trans['price'] is not None:
+                        f.write(f'I{float(trans["price"]):.4f}\n')
+                    if 'quantity' in trans and trans['quantity'] is not None:
+                        f.write(f'Q{float(trans["quantity"]):.4f}\n')
+                    if 'commission' in trans and trans['commission'] is not None:
+                        f.write(f'O{float(trans["commission"]):.2f}\n')
+                    if 'memo' in trans and trans['memo']:
+                        f.write(f'M{trans["memo"]}\n')
+                    f.write('^\n')
                 return True
-            except IOError as e:
-                QMessageBox.critical(self, "Error", f"Failed to write file: {str(e)}")
-                return False
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Failed to create directory: {str(e)}")
+        except (IOError, OSError) as e:
+            QMessageBox.critical(self, "Error", f"Failed to write file: {str(e)}")
             return False
 
 
