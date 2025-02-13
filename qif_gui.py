@@ -13,6 +13,7 @@ class TransactionDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Transaction Details")
         self.setMinimumWidth(500)
+        self.exec_result = True
         layout = QVBoxLayout(self)
         
         # Transaction type selection
@@ -74,18 +75,18 @@ class TransactionDialog(QDialog):
     def update_fields(self, action_type):
         """Show/hide fields based on transaction type"""
         # Default visible fields
-        visible_fields = {'date', 'memo', 'security', 'amount'}  # Security and amount always visible
+        visible_fields = {'date', 'security', 'memo'}  # Always visible
         
         # Add fields based on action type
         if action_type in [InvestmentAction.BUY.value, InvestmentAction.SELL.value]:
-            visible_fields.update({'price', 'quantity', 'commission'})
+            visible_fields.update({'price', 'quantity', 'commission', 'amount'})
         
         elif action_type in [InvestmentAction.BUYX.value, InvestmentAction.SELLX.value]:
             visible_fields.update({'price', 'quantity', 'account'})
         
         elif action_type in [InvestmentAction.DIV.value, InvestmentAction.INTINC.value,
                            InvestmentAction.CGLONG.value, InvestmentAction.CGSHORT.value]:
-            pass  # Only default fields
+            visible_fields.add('amount')
         
         elif action_type == InvestmentAction.REINVDIV.value:
             visible_fields.update({'price', 'quantity'})
@@ -94,11 +95,11 @@ class TransactionDialog(QDialog):
             visible_fields.update({'quantity', 'price', 'account'})
         
         elif action_type == InvestmentAction.STKSPLIT.value:
-            visible_fields.update({'quantity'})
+            visible_fields.add('quantity')
         
         elif action_type in [InvestmentAction.MARGINT.value, InvestmentAction.MISCINC.value,
                            InvestmentAction.MISCEXP.value]:
-            pass  # Only default fields
+            visible_fields.add('amount')
         
         # Show/hide fields
         for field, widget in self.fields.items():
@@ -117,20 +118,19 @@ class TransactionDialog(QDialog):
         data['date'] = self.fields['date'].text().strip()
         data['security'] = self.fields['security'].text().strip()
         
-        # Add other fields if they're visible and not empty
+        # Add other fields if they're not empty
         for field, widget in self.fields.items():
             if field not in ('date', 'security', 'action'):  # Already added
-                if widget.isVisible():
-                    text = widget.text().strip()
-                    if field in ('price', 'quantity', 'commission', 'amount'):
-                        try:
-                            if text:
-                                data[field] = float(text)
-                        except ValueError:
-                            pass
-                    else:
+                text = widget.text().strip()
+                if field in ('price', 'quantity', 'commission', 'amount'):
+                    try:
                         if text:
-                            data[field] = text
+                            data[field] = float(text)
+                    except ValueError:
+                        pass
+                else:
+                    if text:
+                        data[field] = text
         
         # Validate required fields
         if not all(k in data and data[k] and str(data[k]).strip() for k in ['date', 'action', 'security']):
@@ -256,7 +256,7 @@ class QIFConverterGUI(QMainWindow):
         filename, _ = QFileDialog.getOpenFileName(
             self, "Import CSV File", "", "CSV Files (*.csv);;All Files (*.*)")
         if not filename:
-            return
+            return False
             
         try:
             with open(filename, 'r') as f:
@@ -285,16 +285,18 @@ class QIFConverterGUI(QMainWindow):
                                 else:
                                     trans[data_field] = value
                         
-                        if all(trans.get(k) for k in ['action', 'date', 'security']):
-                            self.transactions.append(trans)
+                        if all(k in trans and str(trans[k]).strip() for k in ['action', 'date', 'security']):
+                            self.transactions.append(trans.copy())
                     except (ValueError, KeyError) as e:
                         print(f"Error processing row: {e}")
                         continue
                         
             self.update_transaction_list()
             QMessageBox.information(self, "Success", "CSV file imported successfully")
+            return True
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error importing CSV: {str(e)}")
+            return False
     
     def export_qif(self):
         if not self.transactions:
