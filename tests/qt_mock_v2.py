@@ -174,15 +174,12 @@ class MockQDialog(MockQWidget):
     def exec(self):
         """Execute the dialog and return True to simulate user clicking OK"""
         self.exec_called = True
-        # Always validate data first
-        data = self.get_data()
-        if data is None:  # Invalid data
-            self.result = False
+        # Check if dialog was cancelled
+        if not self.result:
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid, set result to True
-        self.result = True
+        # Dialog was accepted
         self.exec_result = True
         self.accepted.emit()
         return True
