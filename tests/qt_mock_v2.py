@@ -57,16 +57,10 @@ class MockQDialog(MockQWidget):
         self.accepted = QtSignal()
         self.rejected = QtSignal()
         self.type_combo = MockQComboBox()
-        self.fields = {
-            'date': MockQLineEdit(),
-            'security': MockQLineEdit(),
-            'price': MockQLineEdit(),
-            'quantity': MockQLineEdit(),
-            'commission': MockQLineEdit(),
-            'memo': MockQLineEdit(),
-            'amount': MockQLineEdit(),
-            'account': MockQLineEdit()
-        }
+        self.fields = {}
+        for field in ['date', 'security', 'price', 'quantity', 'commission', 'memo', 'amount', 'account']:
+            self.fields[field] = MockQLineEdit()
+            self.fields[field]._text = ""
         
     def exec(self):
         if self.result:
