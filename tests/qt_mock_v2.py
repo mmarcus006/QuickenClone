@@ -145,11 +145,6 @@ class MockQDialog(MockQWidget):
             if data is not None:
                 self.result = True
                 self.exec_result = True
-            self.fields['quantity'].setText('10')
-            self.fields['commission'].setText('4.95')
-            self.fields['memo'].setText('Test buy')
-        else:
-            # Set test data for new transactions
             self.type_combo.setCurrentText('Buy')
             self.fields['date'].setText('01/15/2024')
             self.fields['security'].setText('AAPL')
@@ -187,12 +182,11 @@ class MockQDialog(MockQWidget):
             self.exec_result = False
             self.rejected.emit()
             return False
-        # Data is valid, return current result
-        if self.result:
-            self.accepted.emit()
-            return True
-        self.rejected.emit()
-        return False
+        # Data is valid, set result and return
+        self.result = True
+        self.exec_result = True
+        self.accepted.emit()
+        return True
 
     def get_result(self):
         return self.result  # Return dialog result value
