@@ -145,11 +145,6 @@ class MockQDialog(MockQWidget):
             if data is not None:
                 self.result = True
                 self.exec_result = True
-                self.type_combo.setCurrentText(transaction_data['action'])
-            for field, value in transaction_data.items():
-                if field != 'action' and field in self.fields and value is not None:
-                    self.fields[field].setText(str(value))
-            # Validate data after setting
             self.result = self.get_data() is not None
         else:
             # Set test data
