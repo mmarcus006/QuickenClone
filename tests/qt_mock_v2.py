@@ -132,9 +132,10 @@ class MockQComboBox(MockQWidget):
                 'action': self._current_text,
                 'date': self.fields['date'].text().strip(),
                 'security': self.fields['security'].text().strip(),
-                **{k: float(v.text()) if k in ('price', 'quantity', 'commission', 'amount') and v.text().strip() else v.text() 
-                   for k, v in self.fields.items() 
-                   if k not in ('date', 'security') and v.text().strip()}
+                'price': float(self.fields['price'].text()) if self.fields['price'].text().strip() else 0.0,
+                'quantity': float(self.fields['quantity'].text()) if self.fields['quantity'].text().strip() else 0.0,
+                'commission': float(self.fields['commission'].text()) if self.fields['commission'].text().strip() else 0.0,
+                'memo': self.fields['memo'].text().strip() if self.fields['memo'].text().strip() else ''
             }
         
     def update_fields(self, action_type):
