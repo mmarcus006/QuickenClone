@@ -56,15 +56,31 @@ class MockQDialog(MockQWidget):
         self.result = True
         self.accepted = QtSignal()
         self.rejected = QtSignal()
+        self.type_combo = MockQComboBox()
+        self.fields = {
+            'date': MockQLineEdit(),
+            'security': MockQLineEdit(),
+            'price': MockQLineEdit(),
+            'quantity': MockQLineEdit(),
+            'commission': MockQLineEdit(),
+            'memo': MockQLineEdit(),
+            'amount': MockQLineEdit(),
+            'account': MockQLineEdit()
+        }
         
     def exec(self):
-        self.accepted.emit()
-        return True
+        if self.result:
+            self.accepted.emit()
+            return True
+        self.rejected.emit()
+        return False
     
     def accept(self):
+        self.result = True
         self.accepted.emit()
         
     def reject(self):
+        self.result = False
         self.rejected.emit()
 
 class MockQLineEdit(MockQWidget):
